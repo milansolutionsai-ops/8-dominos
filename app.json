@@ -8,6 +8,11 @@
     "scheme": "eightdominos",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/8Dominos_Logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fffbea"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hasslogics.eightdominos"

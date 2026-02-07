@@ -2,29 +2,28 @@
   <!-- Warm White Background -->
   <rect width="1024" height="1024" fill="#fdfbf7"/>
   
-  <!-- Domino Body (Vertical, Widened) -->
-  <!-- Width increased to 450. Centered at X=287 -->
-  <rect x="287" y="82" width="450" height="860" rx="80" ry="80" fill="#fedd14" stroke="#000000" stroke-width="0"/>
+  <!-- Domino Body (Vertical, Widened, Scaled Down for Padding) -->
+  <!-- Scaled to ~600 height to fit safe zones. Centered at 512,512 -->
+  <rect x="355" y="212" width="314" height="600" rx="60" ry="60" fill="#fedd14" stroke="#000000" stroke-width="0"/>
   
   <!-- Center Dividing Line -->
-  <rect x="307" y="507" width="410" height="10" fill="#000000" opacity="0.8"/>
+  <rect x="365" y="509" width="294" height="6" fill="#000000" opacity="0.8"/>
   
   <!-- Top Half Dots (4 in corners) -->
-  <!-- Horizontal spacing adjusted for wider body. Left X=380, Right X=644 -->
-  <!-- Top Row Y=200 -->
-  <circle cx="380" cy="200" r="35" fill="#000000"/>
-  <circle cx="644" cy="200" r="35" fill="#000000"/>
+  <!-- Top Row Y=280 -->
+  <circle cx="410" cy="285" r="22" fill="#000000"/>
+  <circle cx="614" cy="285" r="22" fill="#000000"/>
   
-  <!-- Bottom Row Y=400 -->
-  <circle cx="380" cy="400" r="35" fill="#000000"/>
-  <circle cx="644" cy="400" r="35" fill="#000000"/>
+  <!-- Bottom Row Y=410 -->
+  <circle cx="410" cy="425" r="22" fill="#000000"/>
+  <circle cx="614" cy="425" r="22" fill="#000000"/>
   
   <!-- Bottom Half Dots (4 in corners) -->
-  <!-- Top Row Y=620 -->
-  <circle cx="380" cy="620" r="35" fill="#000000"/>
-  <circle cx="644" cy="620" r="35" fill="#000000"/>
+  <!-- Top Row Y=600 -->
+  <circle cx="410" cy="595" r="22" fill="#000000"/>
+  <circle cx="614" cy="595" r="22" fill="#000000"/>
   
-  <!-- Bottom Row Y=820 -->
-  <circle cx="380" cy="820" r="35" fill="#000000"/>
-  <circle cx="644" cy="820" r="35" fill="#000000"/>
+  <!-- Bottom Row Y=730 -->
+  <circle cx="410" cy="735" r="22" fill="#000000"/>
+  <circle cx="614" cy="735" r="22" fill="#000000"/>
 </svg>

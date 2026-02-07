@@ -55,6 +55,7 @@ Use these to create the real Android and iOS apps.
 | `git branch -M main` | **Rename**: Set the main branch name (standard for GitHub). |
 | `git remote add origin <URL>` | **Link**: Connect your local folder to your GitHub repository. |
 | `git push -u origin main` | **Upload**: Send your local saves to GitHub. |
+| `git push -f origin main` | **Force Upload**: Use this ONLY if the first push is "rejected". |
 
 ---
 
@@ -73,6 +74,16 @@ If your `eas build` fails with a "Gradle" or "Prebuild" error, run this to reset
 | Command | Description |
 | :--- | :--- |
 | `rm -r android, ios` | **Clean Folders**: Deletes the conflicting native folders. |
+
+---
+
+### 🆘 8. Recovery & Undoing (The Safety Net)
+
+| Scenario | Command |
+| :--- | :--- |
+| **"I deleted my folder!"** | `git clone <URL>` |
+| **"I broke my code - Undo!"** | `git restore .` |
+| **"Get latest from Cloud"** | `git pull` |
 
 ---
 
