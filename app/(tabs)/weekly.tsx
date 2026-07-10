@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { TrendingUp, Minus, TrendingDown } from 'lucide-react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { TrendingUp, Minus, TrendingDown, Share2 } from 'lucide-react-native';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
+import { ShareWeekCard, ShareWeekData } from '@/components/ShareWeekCard';
 import { useDominos } from '@/hooks/useDominos';
 import { DateUtils } from '@/utils/dateUtils';
 import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
@@ -137,6 +140,50 @@ export default function WeeklyScreen() {
   const totalPossible = dominos.length * 7;
   const weeklyPercentage = totalPossible > 0 ? Math.round((weeklyScore / totalPossible) * 100) : 0;
 
+  const shareRef = useRef<View>(null);
+
+  const getBestDomino = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    let best = '';
+    let bestCount = 0;
+    dominos.forEach(domino => {
+      let count = 0;
+      for (let i = 0; i < 7; i++) {
+        const date = DateUtils.addDays(startOfWeek, i);
+        const weekKey = DateUtils.getWeekKeyForDate(date);
+        const dayOfWeek = DateUtils.getDayOfWeek(date);
+        if (domino.completionStatus[weekKey]?.[dayOfWeek]) count++;
+      }
+      if (count > bestCount) {
+        bestCount = count;
+        best = domino.title;
+      }
+    });
+    return best;
+  };
+
+  const shareData: ShareWeekData = {
+    dateRange: getWeekDateRange(),
+    percentage: weeklyPercentage,
+    weekScore: weeklyScore,
+    totalPossible,
+    perfectDays: weekStats.perfectDays,
+    bestDomino: getBestDomino(),
+  };
+
+  const handleShare = async () => {
+    try {
+      const uri = await captureRef(shareRef, { format: 'png', quality: 1 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch (error) {
+      console.error('Error sharing week:', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -242,6 +289,12 @@ export default function WeeklyScreen() {
             </View>
           </View>
         </View>
+
+        <ShareWeekCard ref={shareRef} data={shareData} />
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
+          <Share2 size={18} color={colors.onAccent} />
+          <Text style={styles.shareButtonText}>Share my week</Text>
+        </TouchableOpacity>
 
         <View style={styles.heatmapCardContainer}>
           <View style={styles.heatmapCard}>
@@ -635,6 +688,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: colors.accent,
+  },
+  shareButtonText: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+    color: colors.onAccent,
   },
   spacer: {
     height: 40,
