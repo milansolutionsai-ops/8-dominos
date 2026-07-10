@@ -88,9 +88,10 @@ const styles = StyleSheet.create({
   },
   percent: {
     fontFamily: fonts.bold,
-    fontSize: 64,
+    fontSize: 60,
     color: colors.accent,
     letterSpacing: -2,
+    fontVariant: ['tabular-nums'],
   },
   percentLabel: {
     fontFamily: fonts.medium,
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     paddingHorizontal: 4,
+    fontVariant: ['tabular-nums'],
   },
   statLabel: {
     fontFamily: fonts.medium,

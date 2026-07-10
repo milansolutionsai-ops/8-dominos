@@ -16,6 +16,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
   const [editedDominos, setEditedDominos] = useState<Domino[]>(dominos);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('monday');
   const [hasChanges, setHasChanges] = useState(false);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
 
   const updateDominoActivity = (dominoId: string, day: DayOfWeek, activity: string) => {
     const updated = editedDominos.map(domino =>
@@ -111,10 +112,12 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
             </View>
 
             <TextInput
-              style={styles.activityInput}
+              style={[styles.activityInput, focusedId === domino.id && styles.activityInputFocused]}
               placeholder={`Enter ${domino.title.toLowerCase()} activity for ${DAY_NAMES[DAYS_OF_WEEK.indexOf(selectedDay)]}`}
               value={domino.activities[selectedDay]}
               onChangeText={(text: string) => updateDominoActivity(domino.id, selectedDay, text)}
+              onFocus={() => setFocusedId(domino.id)}
+              onBlur={() => setFocusedId(null)}
               multiline
               numberOfLines={2}
               placeholderTextColor={colors.textMuted}
@@ -267,5 +270,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     minHeight: 60,
     textAlignVertical: 'top',
+  },
+  activityInputFocused: {
+    borderWidth: 2,
+    borderColor: colors.accentBright,
+    backgroundColor: colors.accentSoft,
   },
 });

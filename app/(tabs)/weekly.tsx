@@ -473,6 +473,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 48,
     color: colors.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   statsContainer: {
     flexDirection: 'row',

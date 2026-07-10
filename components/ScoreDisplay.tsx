@@ -68,7 +68,7 @@ export function ScoreDisplay({
               cx={PROGRESS_CENTER}
               cy={PROGRESS_CENTER}
               r={PROGRESS_RADIUS}
-              stroke={colors.border}
+              stroke={colors.surfaceAlt}
               strokeWidth={PROGRESS_STROKE_WIDTH}
               fill="none"
             />
@@ -104,7 +104,7 @@ export function ScoreDisplay({
                 cx={PROGRESS_CENTER}
                 cy={PROGRESS_CENTER}
                 r={PROGRESS_RADIUS}
-                stroke={colors.border}
+                stroke={colors.surfaceAlt}
                 strokeWidth={PROGRESS_STROKE_WIDTH}
                 fill="none"
               />
@@ -175,11 +175,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 38,
     letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
   },
   scoreTotal: {
     fontFamily: fonts.medium,
     fontSize: 16,
     color: colors.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   circleLabel: {
     fontFamily: fonts.semibold,
