@@ -13,6 +13,7 @@ import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
 import MoodCheckIn from '@/components/MoodCheckIn';
 import { StorageService } from '@/utils/storage';
+import { colors } from '@/constants/theme';
 
 export default function DailyScreen() {
   const insets = useSafeAreaInsets();
@@ -68,8 +69,6 @@ export default function DailyScreen() {
 
     if (nextStatus) {
       const currentScore = calculateDailyScore();
-      // Only play standard "pop" if it's not the 8th (last) one.
-      // The 8th one's celebration sound is handled in the useEffect below.
       if (currentScore < 7) {
         await soundEffects.playComplete();
       }
@@ -153,14 +152,7 @@ export default function DailyScreen() {
           totalWeekly={56}
         />
 
-        <DailyJournal currentDate={currentDate.toISOString().split('T')[0]} />
-
-        <MoodCheckIn
-          period="evening"
-          savedMood={eveningMood}
-          onSave={(mood) => handleSaveMood('evening', mood)}
-        />
-
+        {/* Game board leads: the 8 dominoes are the primary action */}
         {dominos.map((domino, index) => (
           <DominoTile
             key={domino.id}
@@ -171,6 +163,21 @@ export default function DailyScreen() {
             index={index}
           />
         ))}
+
+        {/* Secondary: reflection + mood, below the board */}
+        <MoodCheckIn
+          period="morning"
+          savedMood={morningMood}
+          onSave={(mood) => handleSaveMood('morning', mood)}
+        />
+
+        <MoodCheckIn
+          period="evening"
+          savedMood={eveningMood}
+          onSave={(mood) => handleSaveMood('evening', mood)}
+        />
+
+        <DailyJournal currentDate={currentDate.toISOString().split('T')[0]} />
       </ScrollView>
 
       <ConfettiCelebration
@@ -184,7 +191,7 @@ export default function DailyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.bg,
   },
   loading: {
     flex: 1,

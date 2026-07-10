@@ -178,22 +178,24 @@ const styles = StyleSheet.create({
     saveButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fedd14',
+        backgroundColor: colors.accent,
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#000000',
+        borderWidth: 1,
+        borderColor: colors.accent,
         gap: 8,
     },
     saveButtonText: {
         fontSize: 14,
+        fontFamily: fonts.bold,
         fontWeight: '700',
-        color: '#000000',
+        color: colors.onAccent,
     },
     savedText: {
         fontSize: 14,
+        fontFamily: fonts.bold,
         fontWeight: '700',
-        color: '#10b981', // Green
+        color: colors.success,
     },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface MoodData {
     date: string;
@@ -15,22 +16,19 @@ interface MoodTrendChartProps {
 
 export default function MoodTrendChart({ data }: MoodTrendChartProps) {
     const chartHeight = 140;
-    const horizontalMargin = 25; // Safer margin for dots at edges
+    const horizontalMargin = 25;
     const screenWidth = Dimensions.get('window').width;
-    const cardWidth = screenWidth - 32; // marginHorizontal: 16 * 2
-    const chartWidth = cardWidth; // Use full card width for SVG
+    const cardWidth = screenWidth - 32;
+    const chartWidth = cardWidth;
 
-    // Calculate X position for a given index (0-6)
     const getX = (index: number) => {
         const availableWidth = chartWidth - (horizontalMargin * 2);
         return horizontalMargin + (index / 6) * availableWidth;
     };
 
-    // Calculate Y position for a mood (1-5)
     const getY = (mood: number) => {
         const verticalPadding = 10;
         const availableHeight = chartHeight - (verticalPadding * 2);
-        // Invert: 5 is top, 1 is bottom
         return verticalPadding + (availableHeight - ((mood - 1) / 4) * availableHeight);
     };
 
@@ -39,7 +37,6 @@ export default function MoodTrendChart({ data }: MoodTrendChartProps) {
         let isFirst = true;
 
         data.forEach((day, index) => {
-            // Use evening mood as primary, fallback to morning if available
             const mood = day.evening ?? day.morning;
             if (mood !== null) {
                 const x = getX(index);
@@ -84,17 +81,15 @@ export default function MoodTrendChart({ data }: MoodTrendChartProps) {
 
             <View style={styles.chartArea}>
                 <Svg width={chartWidth} height={chartHeight} style={{ overflow: 'visible' }}>
-                    {/* Mood Line */}
                     <Path
                         d={createPath()}
-                        stroke="#000000"
+                        stroke={colors.accent}
                         strokeWidth="3"
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     />
 
-                    {/* Dots */}
                     {data.map((day, index) => {
                         const mood = day.evening ?? day.morning;
                         if (mood === null) return null;
@@ -106,8 +101,8 @@ export default function MoodTrendChart({ data }: MoodTrendChartProps) {
                                 cx={x}
                                 cy={getY(mood)}
                                 r="5"
-                                fill="#fedd14"
-                                stroke="#000000"
+                                fill={colors.accent}
+                                stroke={colors.bg}
                                 strokeWidth="2"
                             />
                         );
@@ -123,7 +118,7 @@ export default function MoodTrendChart({ data }: MoodTrendChartProps) {
                             styles.label,
                             {
                                 position: 'absolute',
-                                left: getX(index) - 15, // center label (width 30)
+                                left: getX(index) - 15,
                                 width: 30
                             }
                         ]}
@@ -138,32 +133,28 @@ export default function MoodTrendChart({ data }: MoodTrendChartProps) {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#ffffff',
-        marginHorizontal: 16,
-        marginBottom: 16,
-        paddingVertical: 20,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#000000',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
+        backgroundColor: colors.surface,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.lg,
+        paddingVertical: spacing.xl,
+        borderRadius: radius.xl,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...elevation.md,
     },
     header: {
-        marginBottom: 16,
+        marginBottom: spacing.lg,
         paddingHorizontal: 20,
     },
     title: {
+        fontFamily: fonts.bold,
         fontSize: 18,
-        fontWeight: '800',
-        color: '#000000',
+        color: colors.textPrimary,
     },
     legend: {
         flexDirection: 'row',
         marginTop: 4,
-        gap: 12,
+        gap: spacing.md,
     },
     legendItem: {
         flexDirection: 'row',
@@ -171,9 +162,9 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     legendText: {
+        fontFamily: fonts.semibold,
         fontSize: 12,
-        fontWeight: '600',
-        color: '#000000',
+        color: colors.textSecondary,
     },
     dot: {
         width: 8,
@@ -181,9 +172,9 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     moodDot: {
-        backgroundColor: '#fedd14',
+        backgroundColor: colors.accent,
         borderWidth: 1,
-        borderColor: '#000000',
+        borderColor: colors.accent,
     },
     chartArea: {
         height: 140,
@@ -193,19 +184,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     emptyText: {
+        fontFamily: fonts.regular,
         fontSize: 14,
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontStyle: 'italic',
     },
     labelsContainer: {
         height: 20,
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     label: {
+        fontFamily: fonts.semibold,
         fontSize: 11,
-        fontWeight: '600',
-        color: '#000000',
-        opacity: 0.5,
+        color: colors.textMuted,
         textAlign: 'center',
     },
 });

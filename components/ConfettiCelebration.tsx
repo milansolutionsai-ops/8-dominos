@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { colors, brand } from '@/constants/theme';
 
 interface ConfettiCelebrationProps {
   trigger: boolean;
@@ -16,7 +17,7 @@ interface ConfettiPiece {
   shape: 'circle' | 'square' | 'triangle';
 }
 
-const COLORS = ['#fedd14', '#000000', '#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
+const COLORS = [colors.accent, brand.blueTint, colors.onAccent, colors.success, colors.warning];
 const CONFETTI_COUNT = 50;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

@@ -4,6 +4,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { OnboardingScreen } from '@/components/OnboardingScreen';
 import { StorageService } from '@/utils/storage';
 import QuoteSplash from '@/components/QuoteSplash';
+import { colors } from '@/constants/theme';
 
 export default function Index() {
   const [setupCompleted, setSetupCompleted] = useState<boolean | null>(null);
@@ -33,8 +34,8 @@ export default function Index() {
 
   if (setupCompleted === null) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fffbea' }}>
-        <ActivityIndicator size="large" color="#fedd14" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }

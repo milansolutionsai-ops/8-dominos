@@ -28,7 +28,7 @@ A minimalist, **premium, game-first** habit tracker. The user commits to 8 daily
 
 - **Stack:** Expo SDK 54, React Native 0.81, React 19, TypeScript, Expo Router, AsyncStorage (single-user). Reanimated v4 + gesture-handler installed. Now also: Moti, Lottie, react-native-view-shot, Poppins.
 - **Off-brand look today:** cream `#fffbea` + bright yellow `#fedd14` + black borders + OS system font. Matches neither the new brand nor a premium feel.
-- **Colour debt (being fixed now):** ~200 hardcoded hex across ~18 files, many default Tailwind greys. **Being migrated to the theme system (`constants/theme.ts`).**
+- **Colour debt (RESOLVED):** the ~200 hardcoded hex across ~18 files were fully migrated to the theme system (`constants/theme.ts`). Zero raw hex remain outside the theme; `tsc` clean. Swapping the palette now re-skins the whole app from one file.
 - **Motion:** split stack (DominoTile on legacy `Animated`, ScoreDisplay on Reanimated). No domino-chain cascade.
 - **Sound:** 3 assets; `toggle` and `complete` share `pop.mp3`; weak.
 - **IA issue:** home buries the 8 dominoes below day-nav, score, journal, mood.

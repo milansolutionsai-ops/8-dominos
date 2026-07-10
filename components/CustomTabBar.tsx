@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Home, Settings } from 'lucide-react-native';
-import { colors, fonts, elevation } from '@/constants/theme';
+import { colors, fonts, radius, elevation } from '@/constants/theme';
 
 interface CustomTabBarProps {
   state: any;
@@ -51,7 +51,6 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
     >
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
-        const { options } = descriptors[route.key];
 
         const onPress = () => {
           const event = navigation.emit({
@@ -97,7 +96,6 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
                 {
                   color: isFocused ? colors.textPrimary : colors.textMuted,
                   fontFamily: isFocused ? fonts.bold : fonts.semibold,
-                  fontWeight: isFocused ? '800' : '600',
                 },
               ]}
             >
@@ -113,59 +111,42 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
 const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fffbea',
-    borderTopColor: '#000000',
-    borderTopWidth: 2,
+    backgroundColor: colors.surfaceAlt,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
     paddingHorizontal: 8,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    ...elevation.md,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 18, // Pushed down even further as requested
+    paddingTop: 18,
     paddingBottom: 4,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   focusedIconContainer: {
-    backgroundColor: '#fedd14',
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: colors.accent,
+    ...elevation.accentGlow,
   },
   indicatorLine: {
     position: 'absolute',
-    bottom: 4, // Moved up slightly to avoid hugging the edge
+    bottom: 4,
     width: 32,
     height: 3,
-    backgroundColor: '#000000',
+    backgroundColor: colors.accent,
     borderRadius: 1.5,
   },
   tabLabel: {
     fontSize: 11,
-    marginTop: 16, // Maximum breathing room between indicator and label
+    marginTop: 16,
     textAlign: 'center',
-    fontWeight: '800',
   },
 });
