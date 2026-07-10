@@ -135,7 +135,7 @@ export default function SettingsScreen() {
     soundEffects.setEnabled(enabled);
     StorageService.saveSetting('soundEnabled', enabled);
     if (enabled) {
-      soundEffects.playToggle();
+      soundEffects.playComplete();
     }
   };
 

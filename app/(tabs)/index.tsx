@@ -78,7 +78,7 @@ export default function DailyScreen() {
       setJustCompletedIndex(idx);
       setTimeout(() => setJustCompletedIndex(null), 400);
     } else {
-      await soundEffects.playToggle();
+      await soundEffects.playUncomplete();
     }
 
     await toggleCompletion(dominoId, weekKey, dayOfWeek, nextStatus);
