@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { soundEffects } from '@/utils/soundEffects';
 import * as Haptics from 'expo-haptics';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface DominoTileProps {
   title: string;
@@ -58,9 +58,9 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
     }
   }, [completed]);
 
-  // Softer yellow for better text contrast
-  const completedBgColor = '#f5d80a'; // Muted/warm yellow
-  const incompleteBgColor = '#fffbea';
+  // Text/icon color adapts to the tile surface: light on the dark incomplete
+  // surface, on-accent on the blue completed fill.
+  const contentColor = completed ? colors.onAccent : colors.textPrimary;
 
   return (
     <Animated.View
@@ -75,20 +75,22 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
         style={[
           styles.tile,
           {
-            backgroundColor: completed ? completedBgColor : incompleteBgColor,
-            shadowColor: completed ? '#d4a800' : '#000000',
-            shadowOpacity: completed ? 0.25 : 0.12,
+            backgroundColor: completed ? colors.accent : colors.surface,
+            borderColor: completed ? colors.accent : colors.border,
           },
+          completed ? elevation.accentGlow : elevation.sm,
         ]}
         onPress={handleToggle}
         activeOpacity={0.8}
       >
         {/* Header: Pillar Name + Checkmark */}
         <View style={styles.header}>
-          <Text style={styles.pillarLabel}>{title}</Text>
+          <Text style={[styles.pillarLabel, { color: contentColor, opacity: completed ? 0.85 : 0.55 }]}>
+            {title}
+          </Text>
           {completed && (
             <View style={styles.checkIcon}>
-              <Check size={18} color="#000000" strokeWidth={3} />
+              <Check size={18} color={colors.onAccent} strokeWidth={3} />
             </View>
           )}
         </View>
@@ -98,8 +100,8 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
           style={[
             styles.activityText,
             {
-              color: '#000000',
-              opacity: completed ? 1 : 0.85,
+              color: contentColor,
+              opacity: completed ? 1 : 0.9,
             },
           ]}
           numberOfLines={2}
@@ -113,49 +115,36 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: spacing.lg,
     marginVertical: 6,
   },
   tile: {
-    backgroundColor: '#fffbea',
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
     paddingHorizontal: 18,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
     minHeight: 90,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   pillarLabel: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     letterSpacing: 0.5,
-    color: '#000000',
     textTransform: 'uppercase',
-    opacity: 0.6,
   },
   checkIcon: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderRadius: 10,
     padding: 3,
   },
   activityText: {
+    fontFamily: fonts.semibold,
     fontSize: 17,
-    fontWeight: '700',
     lineHeight: 24,
-    color: '#000000',
   },
 });

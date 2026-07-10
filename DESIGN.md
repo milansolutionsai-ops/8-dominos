@@ -2,103 +2,102 @@
 
 This is the bar for the app. It is read by the `/design-pass` audit and is the context brief for the **Claude design** pass (read-only repo access). Claude design produces the visual assets (palette, tokens, screen comps, component states, motion direction). **Milan implements everything** in this Expo / React Native codebase.
 
+> **BRAND UPDATE (supersedes the white paper's "dark + gold").** 8 Dominos rebranded. The live brand at **https://8dominos.com** is **blue + navy + cream, font Poppins**, positioned as premium accountability coaching for men (founder Hassan Hallal). All colour work aligns to this brand, NOT the old gold direction.
+
 ---
 
 ## 1. The product in one line
 
 A minimalist, **premium, game-first** habit tracker. The user commits to 8 daily habits across 8 pillars of life (Body, Health, Happiness, Love, Work, Wealth, Spirituality, Soul) and builds a chain reaction of momentum. It must feel like a game first and a tracker second: immersive, satisfying, rewarding on every tap.
 
-**Audience:** self-development / coaching clients. **Owner brand:** Game of Life (Hass). **Positioning:** premium, dark, gold-accented.
+**Audience:** accountability-coaching clients (men, executive/serious tone). **Owner brand:** 8 Dominos / Game of Life (Hass). **Positioning:** premium, masculine, blue/navy.
 
 ---
 
-## 2. Current state (honest baseline)
+## 2. Live brand reference (8dominos.com — authoritative)
 
-- **Stack:** Expo SDK 54, React Native 0.81, React 19, TypeScript, Expo Router (file-based), AsyncStorage (single-user, on-device). `react-native-reanimated` v4 and `gesture-handler` are installed but barely used. `expo-haptics`, `expo-av`, `expo-notifications` wired.
-- **Screens:** Daily board (`app/(tabs)/index.tsx`), Weekly analytics (`weekly.tsx`), Settings (`settings.tsx`), plus Onboarding, Domino setup form, Quote splash, Journal, Mood check-in, Mood trend chart, Score display, Confetti, Custom tab bar.
-- **Look today:** light "notebook / sticky-note" aesthetic. Cream background `#fffbea`, bright yellow `#fedd14`, muted yellow tiles `#f5d80a`, black `#000000` borders and text. This is the **opposite** of the target premium dark + gold direction.
-- **Colour debt:** ~200 hardcoded hex literals scattered across files, including many default Tailwind greys (`#6b7280`, `#9ca3af`, `#e5e7eb`, `#f3f4f6`…). No central theme. This is both the biggest "generic AI-generated" tell and the biggest elevation opportunity. Note: onboarding already dips into near-black `#030001`, so a dark direction is not a stretch.
-- **Motion today:** basic RN `Animated` API (a small scale/spring on tile completion). No shared design language, no domino-chain motion, no screen transitions.
-- **Sound today:** 3 real assets in `assets/sounds/` (`pop.mp3`, `8_dominos_completed.wav`, `morning_check-in.mp3`). Only 4 events mapped, and `toggle` + `complete` share the same `pop.mp3`. Milan's note: the sounds are weak. This is a marquee upgrade area.
-
----
-
-## 3. Target direction
-
-**Dark, premium, gold-accented, game-like.** Think a high-end game HUD, not a productivity app. Deep near-black surfaces, real depth and materials, one confident gold as the hero accent, restrained everywhere else. The 8 pillars should feel like a chain of dominoes with real physicality: momentum, cascade, weight.
-
-Reference feel: Apple-grade native motion (springs, interruptible, physical) + a luxury game aesthetic (gold, dark, tasteful glow, premium type).
+- **Primary blue** `#046BD2` · **hover/darker blue** `#045CB4` · **lighter blue** `#3F73C8`
+- **Deep navy** `#0D1F4F` · **slate** `#1E293B` / `#334155`
+- **White** `#FFFFFF` · **light-blue tint** `#F0F5FA` · **warm cream** `#F7F3EA` · **ink** `#111111`
+- **Font: Poppins** (400/500/600/700)
+- Site vibe: clean, high-contrast, light-themed, premium, direct, masculine, trustworthy.
 
 ---
 
-## 4. Design goals by area
+## 3. Current app state (baseline, from the design-pass audit — scored 46/100)
 
-- **Daily board (home):** the game board. Today's 8 tiles read as a domino chain. Completing one should feel physical and consequential, ideally visibly nudging the next. Score/streak prominent as a HUD.
-- **Domino tile:** the hero component. Distinct, satisfying complete / incomplete states. Depth, not flat. The single most-touched surface, so it earns the most polish.
-- **Score display:** daily x/8 and weekly x/56 as a premium progress HUD (rings/bars), not plain numbers.
-- **Weekly analytics + mood trend:** dark data-viz, gold highlights, legible. Replace the default-grey chart look.
-- **Onboarding + quote splash:** premium first impression, set the tone in the first 3 seconds.
-- **Settings, journal, mood check-in, day navigator, tab bar:** consistent with the system, no orphan light screens.
-- **NEW — "Share my week":** a one-tap action that renders a branded dark + gold summary card (week score, streak, best domino, mood trend) and opens the native share sheet. Doubles as marketing (every share is top-of-funnel). Needs a designed card layout.
-
----
-
-## 5. Motion spec (implementation target: Reanimated v4 + Moti; Lottie for celebrations)
-
-- Tile completion: physical spring, subtle scale + gold fill sweep, success haptic.
-- Domino chain: completing a tile visibly influences the next (cascade / topple cue).
-- Perfect day (8/8): a real celebration moment (Lottie), better than the current confetti.
-- Screen/tab transitions: smooth, native-feeling, interruptible.
-- Level / streak milestones: a rewarding beat.
-- Respect reduced-motion.
-
-## 6. Sound spec (implementation: expo-av; source a licensed premium UI set)
-
-Distinct, crafted, quiet-premium sounds per event: tile complete, tile un-complete (different from complete), perfect-day flourish, streak/level-up, mood check-in. Replace the current shared `pop.mp3`. Sounds are assets Claude design does not produce; Milan sources and wires them.
+- **Stack:** Expo SDK 54, React Native 0.81, React 19, TypeScript, Expo Router, AsyncStorage (single-user). Reanimated v4 + gesture-handler installed. Now also: Moti, Lottie, react-native-view-shot, Poppins.
+- **Off-brand look today:** cream `#fffbea` + bright yellow `#fedd14` + black borders + OS system font. Matches neither the new brand nor a premium feel.
+- **Colour debt (being fixed now):** ~200 hardcoded hex across ~18 files, many default Tailwind greys. **Being migrated to the theme system (`constants/theme.ts`).**
+- **Motion:** split stack (DominoTile on legacy `Animated`, ScoreDisplay on Reanimated). No domino-chain cascade.
+- **Sound:** 3 assets; `toggle` and `complete` share `pop.mp3`; weak.
+- **IA issue:** home buries the 8 dominoes below day-nav, score, journal, mood.
 
 ---
 
-## 7. Brand tokens (PLACEHOLDER — Claude design finalizes)
+## 4. Target direction (the key decision for the Claude design pass)
 
-Starting direction only. Claude design delivers the real palette + scale.
+**Aligned to the blue/navy brand, game-first.** The one open call: **light vs dark.** The brand *website* is light; the product wants a premium game feel.
 
-```
---bg            #0b0b0d   (deep near-black)
---surface       #151519
---surface-2     #1c1c22
---line          #2b2b33
---gold          #d4af37   (hero accent)
---gold-soft     #e7cd84
---text          #ece9e2
---text-muted    #9b9aa3
---success        (define)
---danger         (define)
-```
-Per-pillar accents (optional): each of the 8 dominoes may get a subtle signature tint, but gold stays the system hero.
+**Milan's recommendation (implemented as the working default in `constants/theme.ts`): navy-dark surface + brand-blue `#046BD2` accent.** This stays on-brand, keeps the premium game feel, reads masculine, and suits a daily/evening habit app. Claude design confirms or flips to light — because everything routes through the theme, the switch is a values change in one file.
+
+Reference feel: Apple-grade native motion (springs, interruptible, physical) + a premium, restrained brand aesthetic. Blue is the hero; everything else restrained.
 
 ---
 
-## 8. What we want Claude design to deliver
+## 5. Design goals by area
 
-1. Final **design tokens** (colour, type scale, spacing, radius, elevation) as a clean spec.
+- **Daily board (home):** the game board leads (IA being fixed so tiles come first). Today's 8 tiles read as a domino chain; completing one feels physical and nudges the next. Score/streak as a HUD.
+- **Domino tile:** the hero component. Distinct, satisfying complete / incomplete states, depth, blue accent on completion.
+- **Score display:** daily x/8 and weekly x/56 as a premium ring HUD, brand-anchored score ramp (not traffic-light).
+- **Weekly analytics + mood trend:** dark data-viz, blue highlights, legible.
+- **Onboarding + quote splash:** premium first impression on brand.
+- **Settings, journal, mood, day nav, tab bar:** consistent system, no orphan light screens.
+- **NEW — "Share my week":** one-tap branded summary card (week score, streak, best domino, mood trend) to the native share sheet. Doubles as marketing. Needs a designed card layout.
+
+---
+
+## 6. Motion spec (Reanimated v4 + Moti; Lottie for celebrations)
+
+- Tile completion: physical spring, blue fill sweep, success haptic.
+- Domino chain: completing a tile visibly influences the next (cascade cue).
+- Perfect day (8/8): a real Lottie celebration, better than the current confetti.
+- Screen/tab transitions: smooth, native, interruptible.
+- Streak / milestone beats. Respect reduced-motion. Motion tokens live in `theme.motion`.
+
+## 7. Sound spec (expo-av; source a licensed premium set)
+
+Distinct crafted sounds per event: complete, un-complete (different from complete), perfect-day flourish, streak/level-up, mood check-in. Replace the shared `pop.mp3`. Sounds are assets Claude design does not produce; Milan sources and wires them.
+
+---
+
+## 8. Brand tokens — IMPLEMENTED in `constants/theme.ts`
+
+The theme system is built and is the single source of truth (semantic tokens: `bg`, `surface`, `border`, `textPrimary/Secondary/Muted`, `accent`, `onAccent`, score ramp, per-pillar tints, type scale on Poppins, spacing, radius, motion springs, elevation). Working default = navy-dark + blue.
+
+**What Claude design finalizes:** the exact palette values (and the light-vs-dark call), the type scale refinements, and the per-screen visual language. Delivering new values = editing `palette`/`colors` in one file; the whole app re-skins.
+
+---
+
+## 9. What we want Claude design to deliver
+
+1. Final **design tokens** (colour incl. light-vs-dark decision, type scale, spacing, radius, elevation) mapped to the semantic names in `constants/theme.ts`.
 2. **Screen comps** for: daily board, domino tile (both states), score HUD, weekly analytics, onboarding/splash, and the "Share my week" card.
 3. **Component states** (default / pressed / complete / disabled) for the tile, buttons, inputs.
-4. **Motion direction** notes per interaction (what moves, how, timing feel).
-Deliver as assets/specs. Do not assume web/CSS; this is React Native (StyleSheet), so express tokens and layout in framework-neutral terms.
+4. **Motion direction** notes per interaction.
+Deliver as assets/specs. This is React Native (StyleSheet), so express tokens/layout in framework-neutral terms, mapped to the token names above.
 
 ---
 
-## 9. Forward-compatibility rules (non-negotiable — this becomes the platform foundation)
+## 10. Forward-compatibility rules (non-negotiable — this becomes the platform foundation)
 
-Batch 0 is single-user, but it must be built so Batch 1 (backend + multi-user + coach dashboard) is an upgrade, never a rewrite:
-
-- All colour/type/spacing lives in **one theme module**. Zero new hardcoded hex.
-- Keep persistence behind `StorageService` + the `useDominos` hook so the storage layer can later be swapped for a backend without touching UI.
-- Keep `types/domino.ts` the single source of truth for the data model.
-- Components stay presentational; data access stays in hooks/services.
+- All colour/type/spacing lives in **`constants/theme.ts`**. Zero hardcoded hex in components.
+- Persistence stays behind `StorageService` + the `useDominos` hook so the storage layer can later be swapped for a backend without touching UI.
+- `types/domino.ts` stays the single source of truth for the data model.
+- Components presentational; data access in hooks/services.
 
 ---
 
-## 10. Out of scope for Batch 0 (the fence)
+## 11. Out of scope for Batch 0 (the fence)
 
-No backend, no accounts, no multi-user, no coach dashboard, no leaderboards, no points economy, no survey auto-assign engine. Those are later batches. Batch 0 is: premium redesign + motion + sound + component craft + "Share my week" + finish morning mood + ship.
+No backend, accounts, multi-user, coach dashboard, leaderboards, points economy, or survey auto-assign engine. Batch 0 is: premium brand-aligned redesign + motion + sound + component craft + "Share my week" + finish morning mood + ship.

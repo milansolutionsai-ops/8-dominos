@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Home, Settings } from 'lucide-react-native';
+import { colors, fonts, elevation } from '@/constants/theme';
 
 interface CustomTabBarProps {
   state: any;
@@ -14,7 +15,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
   const getIcon = (routeName: string, focused: boolean) => {
     const size = 24;
     const strokeWidth = focused ? 2.5 : 2;
-    const color = focused ? '#000000' : '#6b7280';
+    const color = focused ? colors.onAccent : colors.textMuted;
 
     switch (routeName) {
       case 'index':
@@ -94,7 +95,8 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
               style={[
                 styles.tabLabel,
                 {
-                  color: isFocused ? '#000000' : '#6b7280',
+                  color: isFocused ? colors.textPrimary : colors.textMuted,
+                  fontFamily: isFocused ? fonts.bold : fonts.semibold,
                   fontWeight: isFocused ? '800' : '600',
                 },
               ]}

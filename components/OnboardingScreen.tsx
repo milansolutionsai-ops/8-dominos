@@ -5,6 +5,7 @@ import { DominoSetupForm } from './DominoSetupForm';
 import { DominoIllustration } from './DominoIllustration';
 import { Domino } from '@/types/domino';
 import { StorageService } from '@/utils/storage';
+import { colors, fonts, elevation } from '@/constants/theme';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -118,7 +119,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           </View>
           {currentStep > 0 && hasUnsavedChanges && (
             <View style={styles.autoSaveIndicator}>
-              <Save size={12} color="#10b981" />
+              <Save size={12} color={colors.success} />
               <Text style={styles.autoSaveText}>Auto-saving...</Text>
             </View>
           )}
@@ -133,7 +134,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         {currentStep === 0 && (
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
             <Text style={styles.nextButtonText}>Get Started</Text>
-            <ArrowRight size={20} color="#030001" />
+            <ArrowRight size={20} color={colors.onAccent} />
           </TouchableOpacity>
         )}
 
@@ -142,7 +143,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             <Text style={styles.completionHint}>✨ Your activities are being auto-saved</Text>
             <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
               <Text style={styles.completeButtonText}>Complete Setup</Text>
-              <ArrowRight size={20} color="#030001" />
+              <ArrowRight size={20} color={colors.onAccent} />
             </TouchableOpacity>
           </View>
         )}
@@ -154,15 +155,15 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.bg,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 48, // Pushed down from top bar
     paddingBottom: 24,
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.surfaceAlt,
     borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    borderBottomColor: colors.border,
   },
   headerTop: {
     flexDirection: 'row',
@@ -171,22 +172,25 @@ const styles = StyleSheet.create({
   },
   stepIndicator: {
     fontSize: 11,
-    color: '#000000',
+    color: colors.textPrimary,
+    fontFamily: fonts.bold,
     fontWeight: '700',
     marginBottom: 8,
     opacity: 0.7,
   },
   title: {
     fontSize: 28,
+    fontFamily: fonts.bold,
     fontWeight: '800',
-    color: '#000000',
+    color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
+    fontFamily: fonts.semibold,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.textPrimary,
     opacity: 0.7,
   },
   content: {
@@ -206,39 +210,37 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   miniDomino: {
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.accent,
     borderRadius: 8,
     padding: 8,
     margin: 4,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     transform: [{ rotate: '15deg' }],
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...elevation.sm,
   },
   miniDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#000000',
+    backgroundColor: colors.onAccent,
     marginBottom: 2,
   },
   welcomeDescription: {
     fontSize: 17,
     lineHeight: 26,
-    color: '#000000',
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 20,
+    fontFamily: fonts.semibold,
     fontWeight: '600',
   },
   welcomeSubtext: {
     fontSize: 14,
     lineHeight: 21,
-    color: '#666',
+    color: colors.textMuted,
     textAlign: 'center',
+    fontFamily: fonts.medium,
     fontWeight: '500',
   },
   nextStepHint: {
@@ -249,7 +251,8 @@ const styles = StyleSheet.create({
   },
   nextStepHintText: {
     fontSize: 15,
-    color: '#666',
+    color: colors.textMuted,
+    fontFamily: fonts.semibold,
     fontWeight: '600',
     textAlign: 'center',
     fontStyle: 'italic',
@@ -258,29 +261,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 48, // Lifted up from bottom navigation buttons
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.bg,
     borderTopWidth: 1,
-    borderTopColor: '#000000',
+    borderTopColor: colors.border,
   },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.accent,
     borderRadius: 16,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: colors.border,
+    ...elevation.sm,
   },
   nextButtonText: {
     fontSize: 16,
+    fontFamily: fonts.bold,
     fontWeight: '800',
-    color: '#000000',
+    color: colors.onAccent,
     marginRight: 8,
     letterSpacing: 0.3,
   },
@@ -288,27 +288,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.accent,
     borderRadius: 16,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: colors.border,
+    ...elevation.sm,
   },
   completeButtonText: {
     fontSize: 16,
+    fontFamily: fonts.bold,
     fontWeight: '800',
-    color: '#000000',
+    color: colors.onAccent,
     marginRight: 8,
     letterSpacing: 0.3,
   },
   completionHint: {
     fontSize: 13,
-    color: '#10b981',
+    color: colors.success,
+    fontFamily: fonts.bold,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 16,
@@ -316,7 +314,7 @@ const styles = StyleSheet.create({
   autoSaveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: colors.accentSoft,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
@@ -324,7 +322,8 @@ const styles = StyleSheet.create({
   },
   autoSaveText: {
     fontSize: 11,
-    color: '#10b981',
+    color: colors.success,
+    fontFamily: fonts.bold,
     fontWeight: '700',
   },
 });

@@ -1,38 +1,38 @@
 # 8 Dominos — Batch 0 Build Plan (internal)
 
-Working plan for the Batch 0 elevation. For the full strategy and the client-facing version, this is the technical companion to the Game of Life "Build & Growth Plan". Design bar lives in `DESIGN.md`.
+Technical companion to the Game of Life "Build & Growth Plan". Design bar lives in `DESIGN.md`.
 
 ## Goal
 
-Take the app that is already live and elevate it to premium (feel, motion, sound, visual craft), add "Share my week", finish loose ends, and ship. **Upgrade, never rebuild** — everything here is the client-side foundation of the future platform.
+Elevate the live app to premium and **on-brand** (feel, motion, sound, visual craft), add "Share my week", finish loose ends, ship. **Upgrade, never rebuild** — this is the client-side foundation of the future platform.
 
-## Passes / sequence
+> **Brand pivot:** 8 Dominos rebranded to **blue + navy + cream, Poppins** (live at 8dominos.com). Supersedes the white paper's dark + gold. See `DESIGN.md`.
 
-1. **Prep** (this branch): context docs + `DESIGN.md`, install, baseline. ✅ in progress
-2. **Diagnose:** `/design-pass` audit of the whole app → baseline score + gap list.
-3. **Elevate:** Claude design pass (read-only) → tokens, comps, motion direction. Milan reviews and locks the palette.
-4. **GATE:** Hass approves the look, sets up store accounts, commits the testimonial. No heavy build before this.
-5. **Build:** implement (this repo).
-6. **Ship:** EAS build + launch, then `/design-pass` again as the acceptance gate.
+## Sequence
 
-## Build scope (Phase 5)
-
-- **Theme extraction:** one theme module, migrate ~200 scattered hex literals to tokens. Zero new hardcoded colours.
-- **Motion:** migrate tile/score/transitions from RN `Animated` to `react-native-reanimated` v4 (+ Moti for declarative polish); domino-chain cascade; Lottie perfect-day celebration.
-- **Sound:** replace/expand the sound set (currently `toggle` and `complete` share `pop.mp3`); distinct crafted sounds per event via `expo-av`.
-- **Components:** rebuild `DominoTile`, `ScoreDisplay`, `MoodCheckIn` against the new design system.
-- **Share my week:** render a branded summary card (`react-native-view-shot`) → native share sheet.
-- **Finish:** wire morning mood (storage already supports it; UI only shows evening), tidy weekly analytics.
-- **Ship:** EAS build. Launch path is Hass's call — Option A stores (Apple $99/yr + Google $25), or Option B free Android APK / web link now, stores later.
+1. **Prep** — context docs + `DESIGN.md`, install, baseline. ✅
+2. **Diagnose** — `/design-pass` audit. ✅ scored **46/100**: strong skeleton + clean architecture, off-brand generic-AI skin, split motion stack. Top gaps: brand misalignment, no theme layer, buried home IA.
+3. **Foundation (this pass, no comps needed)** — ✅/in progress:
+   - `constants/theme.ts` design system (brand tokens, Poppins type scale, motion springs, elevation). ✅
+   - Migrate ~200 hardcoded hex → theme tokens across all files.
+   - Wire Poppins (`@expo-google-fonts/poppins`).
+   - Fix baseline type errors (stale lucide imports in `DailyJournal`, implicit `any` in `(tabs)/_layout`).
+   - Fix home IA (game board leads; demote journal/mood).
+   - Wire morning mood (storage already supports it).
+   - Libs installed: moti, lottie-react-native, react-native-view-shot.
+4. **Claude design pass** — Milan runs it (read-only repo). Produces final palette/tokens (+ light-vs-dark call), screen comps, motion direction.
+5. **GATE** — Hass approves the look, sets up store accounts, commits the testimonial. No heavy visual build before this.
+6. **Visual build (needs comps)** — apply final tokens; redesign component structure per comps; rebuild `DominoTile` + `ScoreDisplay`; domino-chain cascade; Lottie perfect-day; upgraded sound set; "Share my week" card.
+7. **Ship** — EAS build + launch (Option A stores / Option B free Android+web), then `/design-pass` again as the acceptance gate.
 
 ## Fence (out of scope for Batch 0)
 
-No backend, accounts, multi-user, coach dashboard, leaderboards, points economy, or survey engine. Those are Batch 1+ and gated on client/revenue milestones.
+No backend, accounts, multi-user, coach dashboard, leaderboards, points economy, or survey engine. Batch 1+, gated on client/revenue milestones.
 
 ## Forward-compat rules
 
-Theme centralized · persistence stays behind `StorageService`/`useDominos` · `types/domino.ts` is the single data-model source · components presentational, data access in hooks/services.
+Theme centralized in `constants/theme.ts` · persistence behind `StorageService`/`useDominos` · `types/domino.ts` single data-model source · components presentational, data access in hooks/services.
 
 ## Arrangement (context)
 
-Batch 0 done as a friend in exchange for one video testimonial. Referred clients that close are Milan's (no commission back) and fund the future platform build. Code stays Milan's; Game of Life brand is Hass's.
+Batch 0 as a friend for one video testimonial. Referred clients that close are Milan's (no commission back) and fund the future platform. Code stays Milan's; brand is Hass's.

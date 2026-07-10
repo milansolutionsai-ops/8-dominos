@@ -9,6 +9,7 @@ import { DateUtils } from '@/utils/dateUtils';
 import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
 import MoodTrendChart from '@/components/MoodTrendChart';
 import { StorageService } from '@/utils/storage';
+import { colors, fonts, elevation } from '@/constants/theme';
 
 interface WeeklyOverviewProps {
   dominos: Domino[];
@@ -148,11 +149,11 @@ export default function WeeklyScreen() {
 
   const getTrendIcon = () => {
     if (weeklyPercentage >= 75) {
-      return <TrendingUp size={32} color="#10b981" strokeWidth={3} />;
+      return <TrendingUp size={32} color={colors.scoreFull} strokeWidth={3} />;
     } else if (weeklyPercentage >= 50) {
-      return <Minus size={32} color="#f59e0b" strokeWidth={3} />;
+      return <Minus size={32} color={colors.scoreMid} strokeWidth={3} />;
     } else {
-      return <TrendingDown size={32} color="#ef4444" strokeWidth={3} />;
+      return <TrendingDown size={32} color={colors.scoreLow} strokeWidth={3} />;
     }
   };
 
@@ -181,10 +182,10 @@ export default function WeeklyScreen() {
   };
 
   const getBarColor = (percentage: number) => {
-    if (percentage === 100) return '#10b981';
-    if (percentage >= 75) return '#fedd14';
-    if (percentage >= 50) return '#f59e0b';
-    return '#ef4444';
+    if (percentage === 100) return colors.scoreFull;
+    if (percentage >= 75) return colors.scoreHigh;
+    if (percentage >= 50) return colors.scoreMid;
+    return colors.scoreLow;
   };
 
   const getDayBarHeight = (dayIndex: number) => {
