@@ -1,0 +1,156 @@
+import { Platform, TextStyle, ViewStyle } from 'react-native';
+
+/**
+ * 8 Dominos design system — single source of truth for color, type, spacing, motion.
+ *
+ * Palette is the refined navy-dark direction from the Claude design pass (Batch 0),
+ * derived from the live brand at https://8dominos.com:
+ *   brand blue #046BD2 · hover #045CB4 · navy #0D1F4F · slate #1E293B/#334155
+ *   cream #F7F3EA · light-blue tint #F0F5FA · font Poppins
+ *
+ * Direction: navy surface + brand-blue accent (premium, game-first, on-brand).
+ * A light "daytime" theme can ship later as a one-file variant. Components must
+ * never hardcode a hex; always read from here.
+ */
+
+// Raw brand colors (from 8dominos.com Elementor globals) — unchanged.
+export const brand = {
+  blue: '#046BD2',
+  blueDark: '#045CB4',
+  blueTint: '#3F73C8',
+  navy: '#0D1F4F',
+  slate800: '#1E293B',
+  slate700: '#334155',
+  cream: '#F7F3EA',
+  blueBgTint: '#F0F5FA',
+  ink: '#111111',
+  white: '#FFFFFF',
+} as const;
+
+// Semantic tokens — everything in the app references these, not raw brand/hex.
+export const colors = {
+  // surfaces
+  bg: '#060D1C', // app canvas, deepest layer
+  surface: '#0E1A31', // cards, incomplete tiles, sheets
+  surfaceAlt: '#13233F', // headers, tab bar, elevated
+  surfaceMuted: '#0A1428', // inset wells, empty dots, tracks
+
+  // lines / borders
+  border: '#1E2E4C',
+  borderStrong: '#2C4066',
+
+  // text
+  textPrimary: '#F5F8FD',
+  textSecondary: '#AEBCD6',
+  textMuted: '#74839F',
+  textInverse: '#0D1F4F', // text on light / accent fills
+
+  // brand accent
+  accent: '#046BD2', // brand hero, the one true blue
+  accentBright: '#2E8BEF', // rings, glows, large fills on dark
+  accentPressed: '#045CB4',
+  accentSoft: 'rgba(46,139,239,0.16)', // tinted fills, selected chips
+  onAccent: '#FFFFFF',
+
+  // states
+  success: '#2FBF71',
+  warning: '#F0B429',
+  danger: '#EF5A54',
+
+  // score ramp (brand-anchored blue luminance; gold crown at 8/8)
+  scoreLow: '#3A4E74', // 0-3
+  scoreMid: '#2E6FC4', // 4-5
+  scoreHigh: '#2E8BEF', // 6-7
+  scoreFull: '#F0B429', // 8, perfect (gold)
+
+  // scrims / overlays
+  overlay: 'rgba(3,7,16,0.7)',
+  transparent: 'transparent',
+} as const;
+
+// Completed-tile gradient (135deg). Consumed via expo-linear-gradient.
+export const gradients = {
+  tileComplete: ['#2E8BEF', '#046BD2'] as const,
+} as const;
+
+// Per-pillar signature tints (order = Body…Soul; subtle, system blue stays hero).
+export const pillarTints = [
+  '#2E8BEF', '#37C871', '#F0B429', '#EC6A9C',
+  '#5B8DEF', '#C9A227', '#9A86F0', '#57C6DC',
+] as const;
+
+export const fonts = {
+  regular: 'Poppins_400Regular',
+  medium: 'Poppins_500Medium',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
+} as const;
+
+// Type scale (Poppins). Size-specific tracking: large text negative, body near zero.
+export const type = {
+  display: { fontFamily: fonts.bold, fontSize: 34, lineHeight: 40, letterSpacing: -0.5 },
+  h1: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
+  h2: { fontFamily: fonts.semibold, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
+  h3: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, letterSpacing: -0.1 },
+  bodyLg: { fontFamily: fonts.medium, fontSize: 17, lineHeight: 25, letterSpacing: 0 },
+  body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, letterSpacing: 0 },
+  bodyStrong: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, letterSpacing: 0 },
+  caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, letterSpacing: 0.1 },
+  label: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 16, letterSpacing: 0.4 },
+} satisfies Record<string, TextStyle>;
+
+// Apply to HUD/score numerals so counters don't jitter as digits change.
+export const tabularNums: TextStyle = { fontVariant: ['tabular-nums'] };
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+  xxxl: 48,
+} as const;
+
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  pill: 999,
+} as const;
+
+// Motion tokens (apple-design springs: critically damped default; bounce only on
+// momentum-driven interactions). Consumed by Reanimated withSpring/withTiming.
+export const motion = {
+  springDefault: { damping: 26, stiffness: 240, mass: 1 }, // transitions + ring settle
+  springSnappy: { damping: 22, stiffness: 320, mass: 1 }, // button / check pop
+  springBouncy: { damping: 15, stiffness: 220, mass: 1 }, // tile pop
+  springChain: { damping: 18, stiffness: 260, mass: 1 }, // domino-chain cascade
+  durationFast: 120,
+  durationBase: 220,
+  durationSlow: 360,
+} as const;
+
+// Cross-platform elevation presets.
+export const elevation = {
+  sm: Platform.select({
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 6 },
+    android: { elevation: 3 },
+    default: {},
+  }) as ViewStyle,
+  md: Platform.select({
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.32, shadowRadius: 14 },
+    android: { elevation: 8 },
+    default: {},
+  }) as ViewStyle,
+  accentGlow: Platform.select({
+    ios: { shadowColor: '#046BD2', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
+    android: { elevation: 10 },
+    default: {},
+  }) as ViewStyle,
+} as const;
+
+export const theme = { brand, colors, gradients, pillarTints, fonts, type, tabularNums, spacing, radius, motion, elevation };
+export default theme;

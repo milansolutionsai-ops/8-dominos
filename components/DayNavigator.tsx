@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface DayNavigatorProps {
   currentDate: Date;
@@ -34,13 +35,11 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
     return checkDate > today;
   };
 
-
-
   return (
     <View>
       <View style={styles.container}>
         <TouchableOpacity style={styles.navButton} onPress={goToPreviousDay}>
-          <ChevronLeft size={24} color="#000000" strokeWidth={3} />
+          <ChevronLeft size={24} color={colors.textPrimary} strokeWidth={3} />
         </TouchableOpacity>
 
         <View style={styles.dateContainer}>
@@ -58,13 +57,13 @@ export function DayNavigator({ currentDate, onDateChange }: DayNavigatorProps) {
         </View>
 
         <TouchableOpacity style={styles.navButton} onPress={goToNextDay}>
-          <ChevronRight size={24} color="#000000" strokeWidth={3} />
+          <ChevronRight size={24} color={colors.textPrimary} strokeWidth={3} />
         </TouchableOpacity>
       </View>
 
       {!isToday(currentDate) && (
         <TouchableOpacity style={styles.jumpButton} onPress={goToToday}>
-          <Calendar size={18} color="#666666" strokeWidth={3} />
+          <Calendar size={18} color={colors.accent} strokeWidth={3} />
           <Text style={styles.jumpButtonText}>Jump to Today</Text>
         </TouchableOpacity>
       )}
@@ -77,103 +76,78 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#fffbea',
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.bg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   navButton: {
-    backgroundColor: '#fedd14',
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     padding: 14,
     minWidth: 52,
     minHeight: 52,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...elevation.sm,
   },
   dateContainer: {
     alignItems: 'center',
     flex: 1,
   },
   dateText: {
+    fontFamily: fonts.bold,
     fontSize: 20,
-    fontWeight: '800',
-    color: '#000000',
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   badgeContainer: {
     flexDirection: 'row',
-    marginTop: 8,
-    gap: 8,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   todayLabel: {
+    fontFamily: fonts.bold,
     fontSize: 11,
-    fontWeight: '800',
-    color: '#000000',
-    backgroundColor: '#fedd14',
+    color: colors.onAccent,
+    backgroundColor: colors.accent,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: radius.md,
     letterSpacing: 0.3,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   futureLabel: {
+    fontFamily: fonts.bold,
     fontSize: 11,
-    fontWeight: '800',
-    color: '#000000',
-    backgroundColor: '#e5e7eb',
+    color: colors.textMuted,
+    backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     letterSpacing: 0.3,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   jumpButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(254, 221, 20, 0.2)',
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.accentSoft,
     borderWidth: 1,
-    borderColor: '#fedd14',
-    borderRadius: 12,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
   },
   jumpButtonText: {
+    fontFamily: fonts.semibold,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666666',
+    color: colors.accent,
   },
 });

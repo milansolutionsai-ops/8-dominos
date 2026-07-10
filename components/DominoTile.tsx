@@ -1,8 +1,19 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { Text, Pressable, StyleSheet, Platform, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+  interpolateColor,
+  FadeInDown,
+  useReducedMotion,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
-import { soundEffects } from '@/utils/soundEffects';
 import * as Haptics from 'expo-haptics';
+import { colors, gradients, fonts, radius, spacing, elevation, motion } from '@/constants/theme';
 
 interface DominoTileProps {
   title: string;
@@ -10,15 +21,55 @@ interface DominoTileProps {
   completed: boolean;
   onToggle: () => void;
   index: number;
+  /** True when the tile immediately before this one was just completed — drives the chain nudge. */
+  bumped?: boolean;
 }
 
-export function DominoTile({ title, activity, completed, onToggle, index }: DominoTileProps) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-  const handleToggle = async () => {
+export function DominoTile({ title, activity, completed, onToggle, index, bumped }: DominoTileProps) {
+  const reduceMotion = useReducedMotion();
+  const hasActivity = !!activity;
+
+  const fill = useSharedValue(completed ? 1 : 0); // 0 = incomplete, 1 = complete
+  const scale = useSharedValue(1);
+  const press = useSharedValue(1);
+  const nudge = useSharedValue(0);
+
+  useEffect(() => {
+    fill.value = withTiming(completed ? 1 : 0, { duration: motion.durationBase });
+    if (reduceMotion) return;
+    if (completed) {
+      scale.value = withSequence(withTiming(0.96, { duration: 90 }), withSpring(1, motion.springBouncy));
+    } else {
+      scale.value = withTiming(1, { duration: motion.durationFast });
+    }
+  }, [completed]);
+
+  // Chain reaction: when the previous tile completes, this one topples slightly.
+  useEffect(() => {
+    if (bumped && !reduceMotion) {
+      nudge.value = withSequence(withTiming(-4, { duration: 90 }), withSpring(0, motion.springChain));
+    }
+  }, [bumped]);
+
+  const tileStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(fill.value, [0, 1], [colors.border, colors.accentBright]),
+    transform: [{ scale: scale.value * press.value }, { translateY: nudge.value }],
+  }));
+
+  const gradientStyle = useAnimatedStyle(() => ({ opacity: fill.value }));
+
+  const handlePressIn = () => {
+    if (!reduceMotion) press.value = withTiming(0.97, { duration: 80 });
+  };
+  const handlePressOut = () => {
+    press.value = withSpring(1, motion.springSnappy);
+  };
+
+  const handlePress = async () => {
     try {
       if (Platform.OS !== 'web') {
-        // Differentiated haptics: Success pulse for ON, light tap for OFF
         if (!completed) {
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } else {
@@ -28,134 +79,120 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
     } catch (error) {
       console.error('Error with haptics:', error);
     }
-
     onToggle();
   };
 
-  useEffect(() => {
-    if (completed) {
-      // Subtle "pop" animation: scale down slightly, then spring back
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 0.97,
-          duration: 80,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 200,
-          friction: 10,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Reset smoothly
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [completed]);
+  const contentColor = completed ? colors.onAccent : colors.textPrimary;
 
-  // Softer yellow for better text contrast
-  const completedBgColor = '#f5d80a'; // Muted/warm yellow
-  const incompleteBgColor = '#fffbea';
+  // Empty pillar (no activity set): non-interactive disabled treatment.
+  if (!hasActivity) {
+    return (
+      <Animated.View
+        entering={reduceMotion ? undefined : FadeInDown.duration(360).delay(index * 55)}
+        style={styles.container}
+      >
+        <View style={[styles.tile, styles.tileEmpty]}>
+          <Text style={[styles.pillarLabel, { color: colors.textMuted, opacity: 0.55 }]}>{title}</Text>
+          <Text style={styles.emptyText}>No activity set</Text>
+        </View>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
+      entering={reduceMotion ? undefined : FadeInDown.duration(360).delay(index * 55)}
+      style={styles.container}
     >
-      <TouchableOpacity
-        style={[
-          styles.tile,
-          {
-            backgroundColor: completed ? completedBgColor : incompleteBgColor,
-            shadowColor: completed ? '#d4a800' : '#000000',
-            shadowOpacity: completed ? 0.25 : 0.12,
-          },
-        ]}
-        onPress={handleToggle}
-        activeOpacity={0.8}
+      <AnimatedPressable
+        style={[styles.tile, tileStyle, completed ? elevation.accentGlow : elevation.sm]}
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
       >
-        {/* Header: Pillar Name + Checkmark */}
+        {/* Blue gradient fill fades in on completion. */}
+        <Animated.View style={[StyleSheet.absoluteFill, styles.gradientWrap, gradientStyle]} pointerEvents="none">
+          <LinearGradient
+            colors={gradients.tileComplete}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+
         <View style={styles.header}>
-          <Text style={styles.pillarLabel}>{title}</Text>
+          <Text style={[styles.pillarLabel, { color: contentColor, opacity: completed ? 0.85 : 0.55 }]}>
+            {title}
+          </Text>
           {completed && (
             <View style={styles.checkIcon}>
-              <Check size={18} color="#000000" strokeWidth={3} />
+              <Check size={18} color={colors.onAccent} strokeWidth={3} />
             </View>
           )}
         </View>
 
-        {/* Activity: Primary text */}
         <Text
-          style={[
-            styles.activityText,
-            {
-              color: '#000000',
-              opacity: completed ? 1 : 0.85,
-            },
-          ]}
+          style={[styles.activityText, { color: contentColor, opacity: completed ? 1 : 0.9 }]}
           numberOfLines={2}
         >
-          {activity || 'No activity set'}
+          {activity}
         </Text>
-      </TouchableOpacity>
+      </AnimatedPressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: spacing.lg,
     marginVertical: 6,
   },
   tile: {
-    backgroundColor: '#fffbea',
-    borderRadius: 16,
-    paddingVertical: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
     paddingHorizontal: 18,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
     minHeight: 90,
+    overflow: 'hidden',
+  },
+  tileEmpty: {
+    backgroundColor: colors.surfaceMuted,
+    borderStyle: 'dashed',
+    opacity: 0.6,
+  },
+  gradientWrap: {
+    borderRadius: radius.lg,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   pillarLabel: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     letterSpacing: 0.5,
-    color: '#000000',
     textTransform: 'uppercase',
-    opacity: 0.6,
   },
   checkIcon: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderRadius: radius.sm,
     padding: 3,
   },
   activityText: {
+    fontFamily: fonts.semibold,
     fontSize: 17,
-    fontWeight: '700',
     lineHeight: 24,
-    color: '#000000',
+  },
+  emptyText: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    lineHeight: 24,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
 });

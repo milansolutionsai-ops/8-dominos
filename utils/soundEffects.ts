@@ -1,9 +1,16 @@
 import { Audio } from 'expo-av';
 
-// Import local sound assets
-const popSoundAsset = require('@/assets/sounds/pop.mp3');
-const successSoundAsset = require('@/assets/sounds/8_dominos_completed.wav');
-const chimeSoundAsset = require('@/assets/sounds/morning_check-in.mp3');
+/**
+ * Sound layer — five distinct UI sounds (DESIGN.md §6), mp3 in assets/sounds/.
+ *   complete · uncomplete · perfect · streak · mood
+ */
+const completeAsset = require('@/assets/sounds/complete.mp3');
+const uncompleteAsset = require('@/assets/sounds/uncomplete.mp3');
+const perfectAsset = require('@/assets/sounds/perfect.mp3');
+const streakAsset = require('@/assets/sounds/streak.mp3');
+const moodAsset = require('@/assets/sounds/mood.mp3');
+
+type SoundKey = 'complete' | 'uncomplete' | 'perfect' | 'streak' | 'mood';
 
 class SoundEffects {
   private sounds: { [key: string]: Audio.Sound } = {};
@@ -18,7 +25,7 @@ class SoundEffects {
     });
   }
 
-  async loadSound(key: string, asset: any) {
+  async loadSound(key: SoundKey, asset: any) {
     try {
       const { sound } = await Audio.Sound.createAsync(asset, { shouldPlay: false });
       this.sounds[key] = sound;
@@ -28,17 +35,17 @@ class SoundEffects {
   }
 
   async loadAllSounds() {
-    await this.loadSound('toggle', popSoundAsset);
-    await this.loadSound('complete', popSoundAsset);
-    await this.loadSound('perfect', successSoundAsset); // Celebration sound for confetti!
-    await this.loadSound('mood', chimeSoundAsset); // Subtle chime for mood check-in
+    await this.loadSound('complete', completeAsset);
+    await this.loadSound('uncomplete', uncompleteAsset);
+    await this.loadSound('perfect', perfectAsset);
+    await this.loadSound('streak', streakAsset);
+    await this.loadSound('mood', moodAsset);
   }
 
-  async play(soundKey: string) {
+  async play(soundKey: SoundKey) {
     if (!this.enabled || !this.sounds[soundKey]) {
       return;
     }
-
     try {
       await this.sounds[soundKey].replayAsync();
     } catch (error) {
@@ -50,12 +57,16 @@ class SoundEffects {
     await this.play('complete');
   }
 
+  async playUncomplete() {
+    await this.play('uncomplete');
+  }
+
   async playPerfect() {
     await this.play('perfect');
   }
 
-  async playToggle() {
-    await this.play('toggle');
+  async playStreak() {
+    await this.play('streak');
   }
 
   async playMood() {

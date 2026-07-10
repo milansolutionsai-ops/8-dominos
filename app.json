@@ -4,14 +4,14 @@
     "slug": "eight-dominos",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/8Dominos_Logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "eightdominos",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/8Dominos_Logo.png",
+      "image": "./assets/images/adaptive-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#fffbea"
+      "backgroundColor": "#060D1C"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,8 +20,8 @@
     "android": {
       "package": "com.hasslogics.eightdominos",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/8Dominos_Logo.png",
-        "backgroundColor": "#fffbea"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0D1F4F"
       }
     },
     "web": {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Save, RotateCcw, Settings, Calendar } from 'lucide-react-native';
+import { Save, Settings } from 'lucide-react-native';
 import { Domino, DayOfWeek, DAYS_OF_WEEK, DAY_NAMES } from '@/types/domino';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface DominoSetupFormProps {
   dominos: Domino[];
@@ -15,6 +16,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
   const [editedDominos, setEditedDominos] = useState<Domino[]>(dominos);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('monday');
   const [hasChanges, setHasChanges] = useState(false);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
 
   const updateDominoActivity = (dominoId: string, day: DayOfWeek, activity: string) => {
     const updated = editedDominos.map(domino =>
@@ -58,7 +60,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Settings size={20} color="#000000" />
+          <Settings size={20} color={colors.onAccent} />
           <Text style={styles.headerTitle}>Edit Your Dominos</Text>
         </View>
         <View style={styles.headerActions}>
@@ -67,7 +69,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
             onPress={handleSave}
             disabled={!hasChanges}
           >
-            <Save size={14} color="#000000" />
+            <Save size={14} color={colors.onAccent} />
           </TouchableOpacity>
         </View>
       </View>
@@ -110,13 +112,15 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
             </View>
 
             <TextInput
-              style={styles.activityInput}
+              style={[styles.activityInput, focusedId === domino.id && styles.activityInputFocused]}
               placeholder={`Enter ${domino.title.toLowerCase()} activity for ${DAY_NAMES[DAYS_OF_WEEK.indexOf(selectedDay)]}`}
               value={domino.activities[selectedDay]}
               onChangeText={(text: string) => updateDominoActivity(domino.id, selectedDay, text)}
+              onFocus={() => setFocusedId(domino.id)}
+              onBlur={() => setFocusedId(null)}
               multiline
               numberOfLines={2}
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textMuted}
             />
           </View>
         ))}
@@ -128,21 +132,21 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbea',
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fedd14',
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.accent,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.accentPressed,
   },
   headerContent: {
     flexDirection: 'row',
@@ -150,10 +154,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '800',
-    color: '#000000',
-    marginLeft: 8,
+    color: colors.onAccent,
+    marginLeft: spacing.sm,
     letterSpacing: -0.5,
   },
   headerActions: {
@@ -163,113 +167,113 @@ const styles = StyleSheet.create({
   headerButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fffbea',
-    borderRadius: 8,
-    padding: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
     width: 40,
     height: 40,
-    marginLeft: 8,
-    borderWidth: 2,
-    borderColor: '#000000',
+    marginLeft: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   saveButton: {
-    backgroundColor: '#10b981', // Green for save
+    backgroundColor: colors.success,
+    borderColor: colors.success,
   },
   saveButtonDisabled: {
-    backgroundColor: '#e5e7eb',
-    borderColor: '#9ca3af',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
   },
   dayTabs: {
-    backgroundColor: '#fffbea',
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
-    paddingVertical: 12,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingVertical: spacing.md,
   },
   tabsScrollView: {
     flexGrow: 0,
   },
   tabsContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
   },
   dayTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceMuted,
     minWidth: 70,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   activeDayTab: {
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   dayTabText: {
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: '700',
-    color: '#6b7280',
+    color: colors.textMuted,
   },
   activeDayTabText: {
-    color: '#000000',
+    color: colors.onAccent,
   },
   formContainer: {
     flex: 1,
-    paddingTop: 16,
+    paddingTop: spacing.lg,
   },
   dominoForm: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 0,
-    elevation: 3,
+    backgroundColor: colors.surfaceMuted,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...elevation.sm,
   },
   dominoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   dominoNumber: {
-    backgroundColor: '#fedd14',
-    borderRadius: 12,
+    backgroundColor: colors.accent,
+    borderRadius: radius.md,
     width: 24,
     height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
-    borderWidth: 1.5,
-    borderColor: '#000000',
+    marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
   },
   dominoNumberText: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '800',
-    color: '#000000',
+    color: colors.onAccent,
   },
   dominoTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '800',
-    color: '#000000',
+    color: colors.textPrimary,
   },
   activityInput: {
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
     fontSize: 15,
-    fontWeight: '500',
-    color: '#000000',
-    backgroundColor: '#f9fafb',
+    fontFamily: fonts.medium,
+    color: colors.textPrimary,
+    backgroundColor: colors.bg,
     minHeight: 60,
     textAlignVertical: 'top',
+  },
+  activityInputFocused: {
+    borderWidth: 2,
+    borderColor: colors.accentBright,
+    backgroundColor: colors.accentSoft,
   },
 });

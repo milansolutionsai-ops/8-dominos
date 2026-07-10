@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { TrendingUp, Minus, TrendingDown } from 'lucide-react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { TrendingUp, Minus, TrendingDown, Share2 } from 'lucide-react-native';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
+import { ShareWeekCard, ShareWeekData } from '@/components/ShareWeekCard';
 import { useDominos } from '@/hooks/useDominos';
 import { DateUtils } from '@/utils/dateUtils';
 import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
 import MoodTrendChart from '@/components/MoodTrendChart';
 import { StorageService } from '@/utils/storage';
+import { colors, fonts, elevation } from '@/constants/theme';
 
 interface WeeklyOverviewProps {
   dominos: Domino[];
@@ -136,6 +140,50 @@ export default function WeeklyScreen() {
   const totalPossible = dominos.length * 7;
   const weeklyPercentage = totalPossible > 0 ? Math.round((weeklyScore / totalPossible) * 100) : 0;
 
+  const shareRef = useRef<View>(null);
+
+  const getBestDomino = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    let best = '';
+    let bestCount = 0;
+    dominos.forEach(domino => {
+      let count = 0;
+      for (let i = 0; i < 7; i++) {
+        const date = DateUtils.addDays(startOfWeek, i);
+        const weekKey = DateUtils.getWeekKeyForDate(date);
+        const dayOfWeek = DateUtils.getDayOfWeek(date);
+        if (domino.completionStatus[weekKey]?.[dayOfWeek]) count++;
+      }
+      if (count > bestCount) {
+        bestCount = count;
+        best = domino.title;
+      }
+    });
+    return best;
+  };
+
+  const shareData: ShareWeekData = {
+    dateRange: getWeekDateRange(),
+    percentage: weeklyPercentage,
+    weekScore: weeklyScore,
+    totalPossible,
+    perfectDays: weekStats.perfectDays,
+    bestDomino: getBestDomino(),
+  };
+
+  const handleShare = async () => {
+    try {
+      const uri = await captureRef(shareRef, { format: 'png', quality: 1 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch (error) {
+      console.error('Error sharing week:', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -148,11 +196,11 @@ export default function WeeklyScreen() {
 
   const getTrendIcon = () => {
     if (weeklyPercentage >= 75) {
-      return <TrendingUp size={32} color="#10b981" strokeWidth={3} />;
+      return <TrendingUp size={32} color={colors.scoreFull} strokeWidth={3} />;
     } else if (weeklyPercentage >= 50) {
-      return <Minus size={32} color="#f59e0b" strokeWidth={3} />;
+      return <Minus size={32} color={colors.scoreMid} strokeWidth={3} />;
     } else {
-      return <TrendingDown size={32} color="#ef4444" strokeWidth={3} />;
+      return <TrendingDown size={32} color={colors.scoreLow} strokeWidth={3} />;
     }
   };
 
@@ -181,10 +229,10 @@ export default function WeeklyScreen() {
   };
 
   const getBarColor = (percentage: number) => {
-    if (percentage === 100) return '#10b981';
-    if (percentage >= 75) return '#fedd14';
-    if (percentage >= 50) return '#f59e0b';
-    return '#ef4444';
+    if (percentage === 100) return colors.scoreFull;
+    if (percentage >= 75) return colors.scoreHigh;
+    if (percentage >= 50) return colors.scoreMid;
+    return colors.scoreLow;
   };
 
   const getDayBarHeight = (dayIndex: number) => {
@@ -241,6 +289,12 @@ export default function WeeklyScreen() {
             </View>
           </View>
         </View>
+
+        <ShareWeekCard ref={shareRef} data={shareData} />
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
+          <Share2 size={18} color={colors.onAccent} />
+          <Text style={styles.shareButtonText}>Share my week</Text>
+        </TouchableOpacity>
 
         <View style={styles.heatmapCardContainer}>
           <View style={styles.heatmapCard}>
@@ -367,7 +421,7 @@ export default function WeeklyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.bg,
   },
   loading: {
     flex: 1,
@@ -382,38 +436,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 28,
-    fontWeight: '800',
-    color: '#000000',
+    color: colors.textPrimary,
   },
   weekBadge: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start',
   },
   weekBadgeText: {
+    fontFamily: fonts.semibold,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textMuted,
   },
   performanceCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
     marginVertical: 12,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    ...elevation.md,
   },
   performanceHeader: {
     flexDirection: 'row',
@@ -423,9 +470,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   percentageText: {
+    fontFamily: fonts.bold,
     fontSize: 48,
-    fontWeight: '800',
-    color: '#000000',
+    color: colors.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   statsContainer: {
     flexDirection: 'row',
@@ -439,42 +487,35 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: colors.border,
   },
   statLabel: {
+    fontFamily: fonts.semibold,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textMuted,
     marginBottom: 8,
   },
   statValue: {
+    fontFamily: fonts.bold,
     fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textPrimary,
   },
   heatmapCardContainer: {
     paddingHorizontal: 16,
     marginVertical: 12,
   },
   heatmapCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    ...elevation.md,
   },
   heatmapTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textPrimary,
     marginBottom: 20,
   },
   heatmapContainer: {
@@ -492,20 +533,20 @@ const styles = StyleSheet.create({
     width: '80%',
     minHeight: 20,
     borderRadius: 8,
-    borderColor: '#000000',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   barScore: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.onAccent,
   },
   barLabel: {
+    fontFamily: fonts.semibold,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textMuted,
   },
   scrollView: {
     flex: 1,
@@ -519,41 +560,41 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     width: '13%',
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 8,
     alignItems: 'center',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: colors.border,
   },
   todayCard: {
-    backgroundColor: '#fedd14',
-    borderColor: '#000000',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
     borderWidth: 1,
   },
   dayName: {
+    fontFamily: fonts.semibold,
     fontSize: 10,
-    fontWeight: '600',
-    color: '#666',
+    color: colors.textMuted,
     marginBottom: 4,
   },
   todayText: {
-    color: '#000000',
+    color: colors.onAccent,
   },
   dayDate: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   dayScore: {
     marginBottom: 4,
   },
   scoreText: {
+    fontFamily: fonts.semibold,
     fontSize: 10,
-    fontWeight: '600',
-    color: '#666',
+    color: colors.textMuted,
   },
   dotsGrid: {
     flexDirection: 'row',
@@ -565,47 +606,40 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.surfaceMuted,
     margin: 1,
     borderWidth: 0.5,
-    borderColor: '#000000',
+    borderColor: colors.border,
   },
   completedDot: {
-    backgroundColor: '#000000',
+    backgroundColor: colors.accent,
   },
   dominosList: {
     paddingHorizontal: 16,
     marginVertical: 12,
   },
   dominosTitle: {
+    fontFamily: fonts.bold,
     fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   dominoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...elevation.md,
   },
   dominoNumber: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-    backgroundColor: '#fedd14',
+    color: colors.onAccent,
+    backgroundColor: colors.accent,
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -614,9 +648,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   dominoTitle: {
+    fontFamily: fonts.semibold,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    color: colors.textPrimary,
     flex: 1,
   },
   dominoProgress: {
@@ -626,42 +660,51 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.surfaceMuted,
     marginLeft: 4,
     borderWidth: 0.5,
-    borderColor: '#000000',
+    borderColor: colors.border,
   },
   progressDotCompleted: {
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.accent,
   },
   motivationCard: {
-    backgroundColor: '#fedd14',
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginVertical: 12,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: colors.accent,
     padding: 20,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    ...elevation.md,
   },
   motivationTitle: {
+    fontFamily: fonts.bold,
     fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   motivationMessage: {
+    fontFamily: fonts.medium,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
+    color: colors.textSecondary,
     lineHeight: 24,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: colors.accent,
+  },
+  shareButtonText: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+    color: colors.onAccent,
   },
   spacer: {
     height: 40,

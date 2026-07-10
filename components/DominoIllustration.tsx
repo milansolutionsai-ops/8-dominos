@@ -1,12 +1,13 @@
 import React from 'react';
 import { View } from 'react-native';
-import Svg, { Rect, Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Rect, Circle, G } from 'react-native-svg';
+import { colors } from '@/constants/theme';
 
 export const DominoIllustration = () => {
     // Brand colors
-    const dominoColor = '#fedd14'; // bright yellow
-    const dotColor = '#000000';    // black
-    const borderColor = '#000000'; // black
+    const dominoColor = colors.accent;      // brand blue
+    const dotColor = colors.onAccent;       // white pips
+    const borderColor = colors.accentPressed; // darker blue edge
 
     // Domino dimensions
     const width = 30;
@@ -19,9 +20,6 @@ export const DominoIllustration = () => {
         const dots: React.ReactNode[] = [];
 
         // Grid positions for top and bottom halves (30x30 squares)
-        // Horizontal: 7.5, 15, 22.5
-        // Vertical Top: 7.5, 15, 22.5
-        // Vertical Bottom: 37.5, 45, 52.5
         const positions = {
             // Top Half
             tTL: { cx: x + 7.5, cy: y + 7.5 },

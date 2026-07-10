@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert } from 'react-native';
 import { ChevronDown, ChevronUp, PenLine, Check } from 'lucide-react-native';
 import { StorageService } from '../utils/storage';
+import { colors, fonts, elevation } from '@/constants/theme';
 
 interface DailyJournalProps {
     currentDate: string;
@@ -81,13 +82,13 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
                 activeOpacity={0.8}
             >
                 <View style={styles.headerLeft}>
-                    <PenLine size={20} color="#000" />
-                    <Text style={styles.headerTitle}>Today's Journal</Text>
+                    <PenLine size={20} color={colors.onAccent} />
+                    <Text style={styles.headerTitle}>Today’s Journal</Text>
                 </View>
                 {isExpanded ? (
-                    <ChevronUp size={20} color="#000" />
+                    <ChevronUp size={20} color={colors.onAccent} />
                 ) : (
-                    <ChevronDown size={20} color="#000" />
+                    <ChevronDown size={20} color={colors.onAccent} />
                 )}
             </TouchableOpacity>
 
@@ -96,6 +97,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
                     style={styles.input}
                     multiline
                     placeholder="How was your day? What did you accomplish? How do you feel?"
+                    placeholderTextColor={colors.textMuted}
                     value={journalText}
                     onChangeText={setJournalText}
                     textAlignVertical="top"
@@ -108,7 +110,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
                             onPress={handleSave}
                             disabled={isSaving}
                         >
-                            <Check size={16} color="#000" />
+                            <Check size={16} color={colors.onAccent} />
                             <Text style={styles.saveButtonText}>
                                 {isSaving ? 'Saving...' : 'Save Entry'}
                             </Text>
@@ -130,23 +132,19 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderRadius: 16,
         overflow: 'hidden',
-        backgroundColor: '#fffbea',
+        backgroundColor: colors.surface,
         borderWidth: 2,
-        borderColor: '#000000',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
+        borderColor: colors.border,
+        ...elevation.md,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#fedd14',
+        backgroundColor: colors.accent,
         padding: 16,
         borderBottomWidth: 2, // Ideally this only shows when expanded, but keeping it simple
-        borderBottomColor: 'rgba(0,0,0,0.1)',
+        borderBottomColor: colors.border,
     },
     headerLeft: {
         flexDirection: 'row',
@@ -156,7 +154,8 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#000000',
+        fontFamily: fonts.bold,
+        color: colors.onAccent,
     },
     body: {
         overflow: 'hidden',
@@ -165,8 +164,8 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
         fontSize: 15,
-        color: '#000000',
-        fontFamily: 'System', // Use default system font
+        color: colors.textPrimary,
+        fontFamily: fonts.regular,
         minHeight: 150,
     },
     footer: {
@@ -179,22 +178,24 @@ const styles = StyleSheet.create({
     saveButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fedd14',
+        backgroundColor: colors.accent,
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#000000',
+        borderWidth: 1,
+        borderColor: colors.accent,
         gap: 8,
     },
     saveButtonText: {
         fontSize: 14,
+        fontFamily: fonts.bold,
         fontWeight: '700',
-        color: '#000000',
+        color: colors.onAccent,
     },
     savedText: {
         fontSize: 14,
+        fontFamily: fonts.bold,
         fontWeight: '700',
-        color: '#10b981', // Green
+        color: colors.success,
     },
 });

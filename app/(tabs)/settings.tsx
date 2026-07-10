@@ -10,6 +10,7 @@ import { useDominos } from '@/hooks/useDominos';
 import { StorageService } from '@/utils/storage';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
+import { colors, fonts } from '@/constants/theme';
 
 import { StatsService } from '@/utils/stats';
 
@@ -134,7 +135,7 @@ export default function SettingsScreen() {
     soundEffects.setEnabled(enabled);
     StorageService.saveSetting('soundEnabled', enabled);
     if (enabled) {
-      soundEffects.playToggle();
+      soundEffects.playComplete();
     }
   };
 
@@ -164,7 +165,7 @@ export default function SettingsScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Settings size={32} color="#000000" strokeWidth={2} />
+          <Settings size={32} color={colors.textPrimary} strokeWidth={2} />
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
@@ -196,9 +197,9 @@ export default function SettingsScreen() {
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               {soundEnabled ? (
-                <Volume2 size={24} color="#000000" strokeWidth={2} />
+                <Volume2 size={24} color={colors.textPrimary} strokeWidth={2} />
               ) : (
-                <VolumeX size={24} color="#000000" strokeWidth={2} />
+                <VolumeX size={24} color={colors.textPrimary} strokeWidth={2} />
               )}
               <View style={styles.settingTextContainer}>
                 <Text style={styles.settingTitle}>Sound Effects</Text>
@@ -208,17 +209,17 @@ export default function SettingsScreen() {
             <Switch
               value={soundEnabled}
               onValueChange={handleSoundToggle}
-              trackColor={{ false: '#d1d5db', true: '#fedd14' }}
-              thumbColor={soundEnabled ? '#000000' : '#9ca3af'}
+              trackColor={{ false: colors.border, true: colors.accent }}
+              thumbColor={soundEnabled ? colors.onAccent : colors.textMuted}
             />
           </View>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               {notificationsEnabled ? (
-                <Bell size={24} color="#000000" strokeWidth={2} />
+                <Bell size={24} color={colors.textPrimary} strokeWidth={2} />
               ) : (
-                <BellOff size={24} color="#000000" strokeWidth={2} />
+                <BellOff size={24} color={colors.textPrimary} strokeWidth={2} />
               )}
               <View style={styles.settingTextContainer}>
                 <Text style={styles.settingTitle}>Daily Reminders</Text>
@@ -228,8 +229,8 @@ export default function SettingsScreen() {
             <Switch
               value={notificationsEnabled}
               onValueChange={handleNotificationsToggle}
-              trackColor={{ false: '#d1d5db', true: '#fedd14' }}
-              thumbColor={notificationsEnabled ? '#000000' : '#9ca3af'}
+              trackColor={{ false: colors.border, true: colors.accent }}
+              thumbColor={notificationsEnabled ? colors.onAccent : colors.textMuted}
             />
           </View>
         </View>
@@ -252,7 +253,7 @@ export default function SettingsScreen() {
             onPress={handleResetWeek}
           >
             <View style={[styles.actionIconContainer, styles.warningIconContainer]}>
-              <RotateCcw size={24} color="#ea580c" strokeWidth={2} />
+              <RotateCcw size={24} color={colors.warning} strokeWidth={2} />
             </View>
             <View style={styles.actionTextContainer}>
               <Text style={styles.actionTitle}>Reset This Week</Text>
@@ -265,10 +266,10 @@ export default function SettingsScreen() {
             onPress={handleResetAllData}
           >
             <View style={[styles.actionIconContainer, styles.dangerIconContainer]}>
-              <Trash2 size={24} color="#dc2626" strokeWidth={2} />
+              <Trash2 size={24} color={colors.danger} strokeWidth={2} />
             </View>
             <View style={styles.actionTextContainer}>
-              <Text style={[styles.actionTitle, { color: '#dc2626' }]}>Delete All Data</Text>
+              <Text style={[styles.actionTitle, { color: colors.danger }]}>Delete All Data</Text>
               <Text style={styles.actionDescription}>Permanently remove all dominos and progress</Text>
             </View>
           </TouchableOpacity>
@@ -279,13 +280,13 @@ export default function SettingsScreen() {
 
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
-              <Info size={24} color="#000000" strokeWidth={2} />
+              <Info size={24} color={colors.textPrimary} strokeWidth={2} />
               <Text style={styles.infoTitle}>The 8 Dominos Philosophy</Text>
             </View>
             <Text style={styles.infoDescription}>
               Master eight fundamental life areas: physical health, mental wellness, relationships, career growth, financial stability, personal development, spirituality, and recreation. Small daily commitments compound into extraordinary life transformation.
             </Text>
-            <Text style={styles.infoQuote}>"What if you actually did everything you said you would?"</Text>
+            <Text style={styles.infoQuote}>“What if you actually did everything you said you would?”</Text>
           </View>
 
           <View style={styles.versionCard}>
@@ -303,7 +304,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffbea',
+    backgroundColor: colors.bg,
   },
   loading: {
     flex: 1,
@@ -312,7 +313,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
   },
   header: {
     alignItems: 'center',
@@ -322,7 +324,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginTop: 12,
   },
   section: {
@@ -332,7 +335,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -341,17 +345,18 @@ const styles = StyleSheet.create({
   sectionTitleSmall: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 1,
     opacity: 0.6,
   },
   settingItem: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
@@ -370,19 +375,21 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#6b7280',
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
   },
   actionButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
@@ -398,12 +405,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   warningIconContainer: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderColor: '#f59e0b',
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.warning,
   },
   dangerIconContainer: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: '#ef4444',
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.danger,
   },
   actionTextContainer: {
     flex: 1,
@@ -411,19 +418,21 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   actionDescription: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#6b7280',
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
   },
   infoCard: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.accentSoft,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
   },
@@ -436,27 +445,30 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     flex: 1,
   },
   infoDescription: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#000000',
+    fontFamily: fonts.regular,
+    color: colors.textPrimary,
     lineHeight: 20,
     marginBottom: 12,
   },
   infoQuote: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     fontStyle: 'italic',
   },
   versionCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -464,13 +476,15 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   builtByText: {
     fontSize: 12,
     fontWeight: '400',
-    color: '#6b7280',
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -479,10 +493,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border,
     padding: 20,
     width: '47%',
     alignItems: 'center',
@@ -491,13 +505,15 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#000000',
+    fontFamily: fonts.bold,
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   statLabel: {
     fontSize: 12,
     fontWeight: '400',
-    color: '#6b7280',
+    fontFamily: fonts.regular,
+    color: colors.textMuted,
     textAlign: 'center',
   },
   spacer: {

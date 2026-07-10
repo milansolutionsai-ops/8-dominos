@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { useSharedValue, withTiming, withSpring } from 'react-native-reanimated';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface ScoreDisplayProps {
   dailyScore: number;
@@ -18,18 +19,18 @@ const PROGRESS_RADIUS = (PROGRESS_SIZE - PROGRESS_STROKE_WIDTH) / 2;
 const PROGRESS_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RADIUS;
 
 function getScoreColor(percentage: number): string {
-  if (percentage === 100) return '#10b981';
-  if (percentage >= 75) return '#fedd14';
-  if (percentage >= 50) return '#f59e0b';
-  return '#ef4444';
+  if (percentage === 100) return colors.scoreFull;
+  if (percentage >= 75) return colors.scoreHigh;
+  if (percentage >= 50) return colors.scoreMid;
+  return colors.scoreLow;
 }
 
 function getMotivationalMessage(score: number): string {
-  if (score === 8) return '🔥 Perfect Day! All dominos down!';
-  if (score >= 6) return '💪 Great progress! Keep going!';
-  if (score >= 4) return '⚡ Halfway there!';
-  if (score >= 1) return '🎯 Good start! Stack those Ws!';
-  return '👊 Start stacking your wins!';
+  if (score === 8) return 'Perfect day. All dominos down.';
+  if (score >= 6) return 'Great progress. Keep going.';
+  if (score >= 4) return 'Halfway there.';
+  if (score >= 1) return 'Good start. Stack those wins.';
+  return 'Start stacking your wins.';
 }
 
 export function ScoreDisplay({
@@ -67,7 +68,7 @@ export function ScoreDisplay({
               cx={PROGRESS_CENTER}
               cy={PROGRESS_CENTER}
               r={PROGRESS_RADIUS}
-              stroke="#fffbea"
+              stroke={colors.surfaceAlt}
               strokeWidth={PROGRESS_STROKE_WIDTH}
               fill="none"
             />
@@ -94,7 +95,7 @@ export function ScoreDisplay({
         </View>
         <Text style={styles.circleLabel}>Today</Text>
       </View>
-      
+
       {showWeekly && (
         <View style={styles.scoreItem}>
           <View style={styles.circularProgressContainer}>
@@ -103,7 +104,7 @@ export function ScoreDisplay({
                 cx={PROGRESS_CENTER}
                 cy={PROGRESS_CENTER}
                 r={PROGRESS_RADIUS}
-                stroke="#fffbea"
+                stroke={colors.surfaceAlt}
                 strokeWidth={PROGRESS_STROKE_WIDTH}
                 fill="none"
               />
@@ -143,26 +144,25 @@ export function ScoreDisplay({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fedd14',
-    borderRadius: 24,
-    padding: 24,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
+    padding: spacing.xl,
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...elevation.md,
   },
   scoreItem: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   circularProgressContainer: {
     width: PROGRESS_SIZE,
     height: PROGRESS_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
     position: 'relative',
   },
   scoreTextWrapper: {
@@ -171,34 +171,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreNumber: {
+    fontFamily: fonts.bold,
     fontSize: 32,
-    fontWeight: '800',
     lineHeight: 38,
     letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
   },
   scoreTotal: {
+    fontFamily: fonts.medium,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
-    opacity: 0.6,
+    color: colors.textMuted,
+    fontVariant: ['tabular-nums'],
   },
   circleLabel: {
+    fontFamily: fonts.semibold,
     fontSize: 13,
-    fontWeight: '700',
-    color: '#000000',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   motivationalSection: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-    paddingTop: 16,
-    marginTop: 16,
+    borderTopColor: colors.border,
+    paddingTop: spacing.lg,
+    marginTop: spacing.lg,
   },
   motivationalText: {
+    fontFamily: fonts.semibold,
     fontSize: 15,
-    fontWeight: '600',
-    color: '#000000',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
