@@ -1,8 +1,18 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+  interpolateColor,
+  FadeInDown,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
+import { colors, fonts, radius, spacing, elevation, motion } from '@/constants/theme';
 
 interface DominoTileProps {
   title: string;
@@ -10,15 +20,51 @@ interface DominoTileProps {
   completed: boolean;
   onToggle: () => void;
   index: number;
+  /** True when the tile immediately before this one was just completed — drives the chain nudge. */
+  bumped?: boolean;
 }
 
-export function DominoTile({ title, activity, completed, onToggle, index }: DominoTileProps) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+export function DominoTile({ title, activity, completed, onToggle, index, bumped }: DominoTileProps) {
+  const reduceMotion = useReducedMotion();
+  const progress = useSharedValue(completed ? 1 : 0); // 0 = incomplete, 1 = complete
+  const scale = useSharedValue(1);
+  const nudge = useSharedValue(0);
+
+  // Animate the fill + a spring pop whenever completion changes.
+  useEffect(() => {
+    progress.value = withTiming(completed ? 1 : 0, { duration: motion.durationBase });
+    if (reduceMotion) return;
+    if (completed) {
+      scale.value = withSequence(
+        withTiming(0.97, { duration: 80 }),
+        withSpring(1, motion.springBouncy)
+      );
+    } else {
+      scale.value = withTiming(1, { duration: motion.durationFast });
+    }
+  }, [completed]);
+
+  // Chain reaction: when the previous tile completes, this one topples slightly.
+  useEffect(() => {
+    if (bumped && !reduceMotion) {
+      nudge.value = withSequence(
+        withTiming(-4, { duration: 90 }),
+        withSpring(0, motion.springBouncy)
+      );
+    }
+  }, [bumped]);
+
+  const animatedTileStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [colors.surface, colors.accent]),
+    borderColor: interpolateColor(progress.value, [0, 1], [colors.border, colors.accent]),
+    transform: [{ scale: scale.value }, { translateY: nudge.value }],
+  }));
 
   const handleToggle = async () => {
     try {
       if (Platform.OS !== 'web') {
-        // Differentiated haptics: Success pulse for ON, light tap for OFF
         if (!completed) {
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } else {
@@ -28,87 +74,39 @@ export function DominoTile({ title, activity, completed, onToggle, index }: Domi
     } catch (error) {
       console.error('Error with haptics:', error);
     }
-
     onToggle();
   };
 
-  useEffect(() => {
-    if (completed) {
-      // Subtle "pop" animation: scale down slightly, then spring back
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 0.97,
-          duration: 80,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 200,
-          friction: 10,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Reset smoothly
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [completed]);
-
-  // Text/icon color adapts to the tile surface: light on the dark incomplete
-  // surface, on-accent on the blue completed fill.
   const contentColor = completed ? colors.onAccent : colors.textPrimary;
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
+      entering={reduceMotion ? undefined : FadeInDown.duration(360).delay(index * 55)}
+      style={styles.container}
     >
-      <TouchableOpacity
-        style={[
-          styles.tile,
-          {
-            backgroundColor: completed ? colors.accent : colors.surface,
-            borderColor: completed ? colors.accent : colors.border,
-          },
-          completed ? elevation.accentGlow : elevation.sm,
-        ]}
+      <AnimatedTouchable
+        style={[styles.tile, animatedTileStyle, completed ? elevation.accentGlow : elevation.sm]}
         onPress={handleToggle}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
-        {/* Header: Pillar Name + Checkmark */}
-        <View style={styles.header}>
+        <Animated.View style={styles.header}>
           <Text style={[styles.pillarLabel, { color: contentColor, opacity: completed ? 0.85 : 0.55 }]}>
             {title}
           </Text>
           {completed && (
-            <View style={styles.checkIcon}>
+            <Animated.View style={styles.checkIcon}>
               <Check size={18} color={colors.onAccent} strokeWidth={3} />
-            </View>
+            </Animated.View>
           )}
-        </View>
+        </Animated.View>
 
-        {/* Activity: Primary text */}
         <Text
-          style={[
-            styles.activityText,
-            {
-              color: contentColor,
-              opacity: completed ? 1 : 0.9,
-            },
-          ]}
+          style={[styles.activityText, { color: contentColor, opacity: completed ? 1 : 0.9 }]}
           numberOfLines={2}
         >
           {activity || 'No activity set'}
         </Text>
-      </TouchableOpacity>
+      </AnimatedTouchable>
     </Animated.View>
   );
 }

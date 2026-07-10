@@ -23,6 +23,7 @@ export default function DailyScreen() {
   const previousScoreRef = useRef<number>(0);
   const [morningMood, setMorningMood] = useState<number | null>(null);
   const [eveningMood, setEveningMood] = useState<number | null>(null);
+  const [justCompletedIndex, setJustCompletedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadMoods();
@@ -72,6 +73,10 @@ export default function DailyScreen() {
       if (currentScore < 7) {
         await soundEffects.playComplete();
       }
+      // Trigger the chain reaction: the next tile topples.
+      const idx = dominos.findIndex(d => d.id === dominoId);
+      setJustCompletedIndex(idx);
+      setTimeout(() => setJustCompletedIndex(null), 400);
     } else {
       await soundEffects.playToggle();
     }
@@ -161,6 +166,7 @@ export default function DailyScreen() {
             completed={getDominoCompletion(domino)}
             onToggle={() => handleToggleCompletion(domino.id)}
             index={index}
+            bumped={justCompletedIndex === index - 1}
           />
         ))}
 
