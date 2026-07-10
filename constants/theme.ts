@@ -3,17 +3,17 @@ import { Platform, TextStyle, ViewStyle } from 'react-native';
 /**
  * 8 Dominos design system — single source of truth for color, type, spacing, motion.
  *
- * Palette is derived from the live brand at https://8dominos.com
+ * Palette is the refined navy-dark direction from the Claude design pass (Batch 0),
+ * derived from the live brand at https://8dominos.com:
  *   brand blue #046BD2 · hover #045CB4 · navy #0D1F4F · slate #1E293B/#334155
- *   cream #F7F3EA · light-blue tint #F0F5FA · ink #111111 · font Poppins
+ *   cream #F7F3EA · light-blue tint #F0F5FA · font Poppins
  *
- * WORKING DIRECTION: navy-dark surface + brand-blue accent (premium, game-first,
- * on-brand, masculine). Light vs dark and the exact final values are the Claude
- * design pass's call — swap the values in `palette` below and everything re-skins.
- * Components must never hardcode a hex; always read from here.
+ * Direction: navy surface + brand-blue accent (premium, game-first, on-brand).
+ * A light "daytime" theme can ship later as a one-file variant. Components must
+ * never hardcode a hex; always read from here.
  */
 
-// Raw brand colors (from 8dominos.com Elementor globals)
+// Raw brand colors (from 8dominos.com Elementor globals) — unchanged.
 export const brand = {
   blue: '#046BD2',
   blueDark: '#045CB4',
@@ -30,48 +30,53 @@ export const brand = {
 // Semantic tokens — everything in the app references these, not raw brand/hex.
 export const colors = {
   // surfaces
-  bg: '#0A1327', // deep navy-black base
-  surface: '#111E38', // cards / tiles
-  surfaceAlt: brand.navy, // #0D1F4F elevated / headers
-  surfaceMuted: '#0E1830',
+  bg: '#060D1C', // app canvas, deepest layer
+  surface: '#0E1A31', // cards, incomplete tiles, sheets
+  surfaceAlt: '#13233F', // headers, tab bar, elevated
+  surfaceMuted: '#0A1428', // inset wells, empty dots, tracks
 
   // lines / borders
-  border: '#22314F',
-  borderStrong: '#33456B',
+  border: '#1E2E4C',
+  borderStrong: '#2C4066',
 
   // text
-  textPrimary: '#F4F7FC',
-  textSecondary: '#B4C0D8',
-  textMuted: '#7C89A6',
-  textInverse: brand.navy, // dark text on light/accent surfaces
+  textPrimary: '#F5F8FD',
+  textSecondary: '#AEBCD6',
+  textMuted: '#74839F',
+  textInverse: '#0D1F4F', // text on light / accent fills
 
   // brand accent
-  accent: brand.blue, // #046BD2 hero
-  accentPressed: brand.blueDark,
-  accentSoft: 'rgba(4,107,210,0.14)', // tinted fills
-  onAccent: brand.white,
+  accent: '#046BD2', // brand hero, the one true blue
+  accentBright: '#2E8BEF', // rings, glows, large fills on dark
+  accentPressed: '#045CB4',
+  accentSoft: 'rgba(46,139,239,0.16)', // tinted fills, selected chips
+  onAccent: '#FFFFFF',
 
   // states
-  success: '#22C55E',
-  warning: '#F5A623',
-  danger: '#F0524B',
+  success: '#2FBF71',
+  warning: '#F0B429',
+  danger: '#EF5A54',
 
-  // score ramp (was traffic-light; now brand-anchored)
-  scoreFull: '#22C55E',
-  scoreHigh: brand.blue,
-  scoreMid: '#F5A623',
-  scoreLow: '#7C89A6',
+  // score ramp (brand-anchored blue luminance; gold crown at 8/8)
+  scoreLow: '#3A4E74', // 0-3
+  scoreMid: '#2E6FC4', // 4-5
+  scoreHigh: '#2E8BEF', // 6-7
+  scoreFull: '#F0B429', // 8, perfect (gold)
 
   // scrims / overlays
-  overlay: 'rgba(4,9,20,0.66)',
+  overlay: 'rgba(3,7,16,0.7)',
   transparent: 'transparent',
 } as const;
 
-// Per-pillar signature tints (subtle; accent stays the system hero).
-// Order matches the 8 dominoes: Body, Health, Happiness, Love, Work, Wealth, Spirituality, Soul.
+// Completed-tile gradient (135deg). Consumed via expo-linear-gradient.
+export const gradients = {
+  tileComplete: ['#2E8BEF', '#046BD2'] as const,
+} as const;
+
+// Per-pillar signature tints (order = Body…Soul; subtle, system blue stays hero).
 export const pillarTints = [
-  '#046BD2', '#22C55E', '#F5A623', '#EC5A96',
-  '#3F73C8', '#D4A017', '#8B7BE8', '#5AC8D8',
+  '#2E8BEF', '#37C871', '#F0B429', '#EC6A9C',
+  '#5B8DEF', '#C9A227', '#9A86F0', '#57C6DC',
 ] as const;
 
 export const fonts = {
@@ -81,8 +86,7 @@ export const fonts = {
   bold: 'Poppins_700Bold',
 } as const;
 
-// Type scale (Poppins). Size-specific tracking per apple-design typography rules:
-// large text gets negative tracking, body near zero.
+// Type scale (Poppins). Size-specific tracking: large text negative, body near zero.
 export const type = {
   display: { fontFamily: fonts.bold, fontSize: 34, lineHeight: 40, letterSpacing: -0.5 },
   h1: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
@@ -94,6 +98,9 @@ export const type = {
   caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, letterSpacing: 0.1 },
   label: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 16, letterSpacing: 0.4 },
 } satisfies Record<string, TextStyle>;
+
+// Apply to HUD/score numerals so counters don't jitter as digits change.
+export const tabularNums: TextStyle = { fontVariant: ['tabular-nums'] };
 
 export const spacing = {
   xs: 4,
@@ -117,9 +124,10 @@ export const radius = {
 // Motion tokens (apple-design springs: critically damped default; bounce only on
 // momentum-driven interactions). Consumed by Reanimated withSpring/withTiming.
 export const motion = {
-  springDefault: { damping: 26, stiffness: 240, mass: 1 }, // response ~0.35s, no overshoot
-  springSnappy: { damping: 22, stiffness: 320, mass: 1 },
-  springBouncy: { damping: 15, stiffness: 220, mass: 1 }, // for flick/release moments
+  springDefault: { damping: 26, stiffness: 240, mass: 1 }, // transitions + ring settle
+  springSnappy: { damping: 22, stiffness: 320, mass: 1 }, // button / check pop
+  springBouncy: { damping: 15, stiffness: 220, mass: 1 }, // tile pop
+  springChain: { damping: 18, stiffness: 260, mass: 1 }, // domino-chain cascade
   durationFast: 120,
   durationBase: 220,
   durationSlow: 360,
@@ -138,11 +146,11 @@ export const elevation = {
     default: {},
   }) as ViewStyle,
   accentGlow: Platform.select({
-    ios: { shadowColor: brand.blue, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 16 },
+    ios: { shadowColor: '#046BD2', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
     android: { elevation: 10 },
     default: {},
   }) as ViewStyle,
 } as const;
 
-export const theme = { brand, colors, pillarTints, fonts, type, spacing, radius, motion, elevation };
+export const theme = { brand, colors, gradients, pillarTints, fonts, type, tabularNums, spacing, radius, motion, elevation };
 export default theme;
