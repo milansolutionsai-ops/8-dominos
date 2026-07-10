@@ -1,19 +1,14 @@
 import { Audio } from 'expo-av';
 
 /**
- * Sound layer. The design pass calls for FIVE distinct assets (see DESIGN.md §6):
- *   complete   ~160ms rising      uncomplete ~170ms falling (mirror of complete)
- *   perfect    ~1.1s arpeggio     streak     ~450ms two-note rise
- *   mood       ~450ms warm mallet
- *
- * Those licensed files are sourced by Milan. Until they land, the five keys map
- * to the three existing assets (Metro can't `require` a file that doesn't exist,
- * so we don't reference the not-yet-added files). To upgrade: drop the new files
- * into assets/sounds/, then point each key at its file in loadAllSounds().
+ * Sound layer — five distinct UI sounds (DESIGN.md §6), mp3 in assets/sounds/.
+ *   complete · uncomplete · perfect · streak · mood
  */
-const completeAsset = require('@/assets/sounds/pop.mp3');
-const perfectAsset = require('@/assets/sounds/8_dominos_completed.wav');
-const moodAsset = require('@/assets/sounds/morning_check-in.mp3');
+const completeAsset = require('@/assets/sounds/complete.mp3');
+const uncompleteAsset = require('@/assets/sounds/uncomplete.mp3');
+const perfectAsset = require('@/assets/sounds/perfect.mp3');
+const streakAsset = require('@/assets/sounds/streak.mp3');
+const moodAsset = require('@/assets/sounds/mood.mp3');
 
 type SoundKey = 'complete' | 'uncomplete' | 'perfect' | 'streak' | 'mood';
 
@@ -40,11 +35,10 @@ class SoundEffects {
   }
 
   async loadAllSounds() {
-    // TODO(assets): swap uncomplete + streak to their own licensed files when added.
     await this.loadSound('complete', completeAsset);
-    await this.loadSound('uncomplete', completeAsset);
+    await this.loadSound('uncomplete', uncompleteAsset);
     await this.loadSound('perfect', perfectAsset);
-    await this.loadSound('streak', perfectAsset);
+    await this.loadSound('streak', streakAsset);
     await this.loadSound('mood', moodAsset);
   }
 
