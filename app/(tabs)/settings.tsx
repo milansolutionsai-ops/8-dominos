@@ -286,7 +286,7 @@ export default function SettingsScreen() {
             <Text style={styles.infoDescription}>
               Master eight fundamental life areas: physical health, mental wellness, relationships, career growth, financial stability, personal development, spirituality, and recreation. Small daily commitments compound into extraordinary life transformation.
             </Text>
-            <Text style={styles.infoQuote}>"What if you actually did everything you said you would?"</Text>
+            <Text style={styles.infoQuote}>“What if you actually did everything you said you would?”</Text>
           </View>
 
           <View style={styles.versionCard}>

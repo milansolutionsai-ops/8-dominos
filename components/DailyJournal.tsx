@@ -83,7 +83,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
             >
                 <View style={styles.headerLeft}>
                     <PenLine size={20} color={colors.onAccent} />
-                    <Text style={styles.headerTitle}>Today's Journal</Text>
+                    <Text style={styles.headerTitle}>Today’s Journal</Text>
                 </View>
                 {isExpanded ? (
                     <ChevronUp size={20} color={colors.onAccent} />

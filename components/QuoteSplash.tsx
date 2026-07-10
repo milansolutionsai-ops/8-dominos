@@ -43,7 +43,7 @@ export default function QuoteSplash({ onComplete }: QuoteSplashProps) {
                 <Text style={styles.headerText}>8 DOMINOS</Text>
 
                 <View style={styles.quoteContainer}>
-                    <Text style={styles.quoteText}>"{quote.text}"</Text>
+                    <Text style={styles.quoteText}>“{quote.text}”</Text>
                     <Text style={styles.authorText}>— {quote.author}</Text>
                 </View>
             </Animated.View>

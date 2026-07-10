@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
-import { colors, brand } from '@/constants/theme';
+import { View, Text, StyleSheet, Animated, Dimensions, Easing } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import { colors, brand, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface ConfettiCelebrationProps {
   trigger: boolean;
@@ -45,7 +46,10 @@ const getShapeStyle = (shape: 'circle' | 'square' | 'triangle') => {
 };
 
 export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebrationProps) {
+  const reduceMotion = useReducedMotion();
   const confettiPiecesRef = useRef<ConfettiPiece[]>([]);
+  const badgeScale = useRef(new Animated.Value(0)).current;
+  const badgeOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const pieces: ConfettiPiece[] = [];
@@ -56,12 +60,25 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
         y: new Animated.Value(-50),
         rotate: new Animated.Value(0),
         scale: new Animated.Value(1),
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        shape: (['circle', 'square', 'triangle'] as const)[Math.floor(Math.random() * 3)],
+        color: COLORS[i % COLORS.length],
+        shape: (['circle', 'square', 'triangle'] as const)[i % 3],
       });
     }
     confettiPiecesRef.current = pieces;
   }, []);
+
+  const animateBadge = () => {
+    badgeScale.setValue(reduceMotion ? 1 : 0.6);
+    badgeOpacity.setValue(0);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(badgeScale, { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }),
+        Animated.timing(badgeOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      ]),
+      Animated.delay(1600),
+      Animated.timing(badgeOpacity, { toValue: 0, duration: 400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  };
 
   const launchConfetti = () => {
     const animations = confettiPiecesRef.current.map((piece, index) => {
@@ -70,38 +87,18 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
       piece.rotate.setValue(0);
       piece.scale.setValue(1);
 
-      const randomX = Math.random() * screenWidth;
-      const duration = 2000 + Math.random() * 1000;
+      const randomX = ((index * 137) % screenWidth);
+      const duration = 2000 + (index % 10) * 100;
 
       return Animated.sequence([
         Animated.delay(index * 30),
         Animated.parallel([
-          Animated.timing(piece.x, {
-            toValue: randomX,
-            duration,
-            useNativeDriver: false,
-          }),
-          Animated.timing(piece.y, {
-            toValue: screenHeight + 100,
-            duration,
-            useNativeDriver: false,
-          }),
-          Animated.timing(piece.rotate, {
-            toValue: 10,
-            duration,
-            useNativeDriver: false,
-          }),
+          Animated.timing(piece.x, { toValue: randomX, duration, useNativeDriver: false }),
+          Animated.timing(piece.y, { toValue: screenHeight + 100, duration, useNativeDriver: false }),
+          Animated.timing(piece.rotate, { toValue: 10, duration, useNativeDriver: false }),
           Animated.sequence([
-            Animated.timing(piece.scale, {
-              toValue: 1,
-              duration: duration * 0.1,
-              useNativeDriver: false,
-            }),
-            Animated.timing(piece.scale, {
-              toValue: 0,
-              duration: duration * 0.9,
-              useNativeDriver: false,
-            }),
+            Animated.timing(piece.scale, { toValue: 1, duration: duration * 0.1, useNativeDriver: false }),
+            Animated.timing(piece.scale, { toValue: 0, duration: duration * 0.9, useNativeDriver: false }),
           ]),
         ]),
       ]);
@@ -114,7 +111,14 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
 
   useEffect(() => {
     if (trigger) {
-      launchConfetti();
+      animateBadge();
+      if (!reduceMotion) {
+        launchConfetti();
+      } else {
+        // No falling confetti under reduced motion; badge alone, then done.
+        const t = setTimeout(() => onComplete?.(), 2200);
+        return () => clearTimeout(t);
+      }
     }
   }, [trigger]);
 
@@ -133,7 +137,8 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
           styles.confettiPiece,
           shapeStyle,
           {
-            backgroundColor: piece.color,
+            backgroundColor: piece.shape === 'triangle' ? 'transparent' : piece.color,
+            borderBottomColor: piece.shape === 'triangle' ? piece.color : undefined,
             transform: [
               { translateX: piece.x },
               { translateY: piece.y },
@@ -152,7 +157,19 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
 
   return (
     <View style={styles.container} pointerEvents="none">
-      {confettiPiecesRef.current.map(renderConfettiPiece)}
+      {!reduceMotion && confettiPiecesRef.current.map(renderConfettiPiece)}
+      <View style={styles.badgeWrapper} pointerEvents="none">
+        <Animated.View
+          style={[
+            styles.badge,
+            { opacity: badgeOpacity, transform: [{ scale: badgeScale }] },
+            elevation.accentGlow,
+          ]}
+        >
+          <Text style={styles.badgeTitle}>Perfect Day</Text>
+          <Text style={styles.badgeSubtitle}>All 8 dominos down</Text>
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -165,5 +182,30 @@ const styles = StyleSheet.create({
   },
   confettiPiece: {
     position: 'absolute',
+  },
+  badgeWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badge: {
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xxl,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+  },
+  badgeTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 24,
+    color: colors.onAccent,
+    letterSpacing: -0.3,
+  },
+  badgeSubtitle: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.onAccent,
+    opacity: 0.85,
+    marginTop: 2,
   },
 });
