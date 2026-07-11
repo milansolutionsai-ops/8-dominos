@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { DominoPips } from './DominoPips';
 
 export interface ShareWeekData {
   dateRange: string;
@@ -43,6 +44,14 @@ export const ShareWeekCard = forwardRef<View, { data: ShareWeekData }>(({ data }
           <Text style={styles.statValue} numberOfLines={1}>{data.bestDomino || '—'}</Text>
           <Text style={styles.statLabel}>Top pillar</Text>
         </View>
+      </View>
+
+      <View style={styles.chain}>
+        {[1, 2, 3, 4].map((n) => (
+          <View key={n} style={styles.chainTile}>
+            <DominoPips count={n} color={colors.onAccent} size={20} />
+          </View>
+        ))}
       </View>
 
       <Text style={styles.footer}>Body · Health · Happiness · Love · Work · Wealth · Spirituality · Soul</Text>
@@ -129,12 +138,26 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 4,
   },
+  chain: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+  },
+  chainTile: {
+    width: 30,
+    height: 44,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   footer: {
     fontFamily: fonts.medium,
     fontSize: 10,
     color: colors.textMuted,
     textAlign: 'center',
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     letterSpacing: 0.3,
   },
 });

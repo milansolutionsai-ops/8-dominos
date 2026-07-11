@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { getRandomQuote, Quote } from '../utils/quotes';
-import { colors, fonts } from '@/constants/theme';
+import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { DominoPips } from './DominoPips';
 
 interface QuoteSplashProps {
     onComplete: () => void;
@@ -42,6 +43,20 @@ export default function QuoteSplash({ onComplete }: QuoteSplashProps) {
             <Animated.View style={[styles.content, { opacity: opacityAnim }]}>
                 <Text style={styles.headerText}>8 DOMINOS</Text>
 
+                <View style={styles.chain}>
+                    {[1, 2, 3, 4, 5].map((n, i) => {
+                        const lit = i === 4;
+                        return (
+                            <View
+                                key={n}
+                                style={[styles.chainTile, lit && styles.chainTileLit, { transform: [{ rotate: `${i * 6 - 10}deg` }] }]}
+                            >
+                                <DominoPips count={n} color={lit ? colors.onAccent : colors.textMuted} size={16} />
+                            </View>
+                        );
+                    })}
+                </View>
+
                 <View style={styles.quoteContainer}>
                     <Text style={styles.quoteText}>“{quote.text}”</Text>
                     <Text style={styles.authorText}>— {quote.author}</Text>
@@ -78,6 +93,26 @@ const styles = StyleSheet.create({
         letterSpacing: 3,
         color: colors.accent,
         textTransform: 'uppercase',
+    },
+    chain: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: spacing.xxl,
+    },
+    chainTile: {
+        width: 24,
+        height: 36,
+        borderRadius: radius.sm,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    chainTileLit: {
+        backgroundColor: colors.accent,
+        borderColor: colors.accentBright,
     },
     quoteContainer: {
         alignItems: 'center',
