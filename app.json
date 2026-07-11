@@ -21,7 +21,7 @@
       "package": "com.hasslogics.eightdominos",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0D1F4F"
+        "backgroundColor": "#0062FF"
       }
     },
     "web": {
