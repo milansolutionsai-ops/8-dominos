@@ -23,11 +23,13 @@ interface DominoTileProps {
   index: number;
   /** True when a neighbour just completed — drives the chain topple. */
   bumped?: boolean;
+  /** Changing number triggers a topple — used by the board for the Perfect Day wave. */
+  toppleSignal?: number;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function DominoTile({ title, activity, completed, onToggle, index, bumped }: DominoTileProps) {
+export function DominoTile({ title, activity, completed, onToggle, index, bumped, toppleSignal }: DominoTileProps) {
   const reduceMotion = useReducedMotion();
   const hasActivity = !!activity;
   const pipCount = index + 1; // Body = 1 … Soul = 8
@@ -52,6 +54,10 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
   useEffect(() => {
     if (bumped && !reduceMotion) knock(-5); // sympathetic chain topple
   }, [bumped]);
+
+  useEffect(() => {
+    if (toppleSignal && !reduceMotion) knock(-11); // Perfect Day wave
+  }, [toppleSignal]);
 
   const tileStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(fill.value, [0, 1], [colors.border, colors.accentBright]),
@@ -144,7 +150,6 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: spacing.lg,
     marginVertical: 5,
   },
   tile: {

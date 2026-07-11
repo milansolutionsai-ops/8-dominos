@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { DominoTile } from '@/components/DominoTile';
+import { DominoBoard } from '@/components/DominoBoard';
 import { DayNavigator } from '@/components/DayNavigator';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
 import DailyJournal from '@/components/DailyJournal';
@@ -157,18 +157,17 @@ export default function DailyScreen() {
           totalWeekly={56}
         />
 
-        {/* Game board leads: the 8 dominoes are the primary action */}
-        {dominos.map((domino, index) => (
-          <DominoTile
-            key={domino.id}
-            title={domino.title}
-            activity={getCurrentDayActivity(domino)}
-            completed={getDominoCompletion(domino)}
-            onToggle={() => handleToggleCompletion(domino.id)}
-            index={index}
-            bumped={justCompletedIndex === index - 1}
-          />
-        ))}
+        {/* Game board leads: the 8 dominoes as a chain */}
+        <DominoBoard
+          items={dominos.map((domino) => ({
+            id: domino.id,
+            title: domino.title,
+            activity: getCurrentDayActivity(domino),
+            completed: getDominoCompletion(domino),
+          }))}
+          onToggle={handleToggleCompletion}
+          justCompletedIndex={justCompletedIndex}
+        />
 
         {/* Secondary: reflection + mood, below the board */}
         <MoodCheckIn
