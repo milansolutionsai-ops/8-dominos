@@ -47,9 +47,9 @@ export const ShareWeekCard = forwardRef<View, { data: ShareWeekData }>(({ data }
       </View>
 
       <View style={styles.chain}>
-        {[1, 2, 3, 4].map((n) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
           <View key={n} style={styles.chainTile}>
-            <DominoPips count={n} color={colors.onAccent} size={20} />
+            <DominoPips count={n} color={colors.onAccent} size={14} />
           </View>
         ))}
       </View>
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
   chain: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 6,
     marginTop: spacing.xl,
   },
   chainTile: {
-    width: 30,
-    height: 44,
+    width: 26,
+    height: 38,
     borderRadius: radius.sm,
     backgroundColor: colors.accent,
     alignItems: 'center',
