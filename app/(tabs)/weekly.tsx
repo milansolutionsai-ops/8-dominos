@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 import { TrendingUp, Minus, TrendingDown, Share2 } from 'lucide-react-native';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
 import { ShareWeekCard, ShareWeekData } from '@/components/ShareWeekCard';
+import { DominoPips } from '@/components/DominoPips';
 import { useDominos } from '@/hooks/useDominos';
 import { DateUtils } from '@/utils/dateUtils';
 import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
@@ -383,7 +384,9 @@ export default function WeeklyScreen() {
           <Text style={styles.dominosTitle}>Your Dominos</Text>
           {dominos.map((domino, index) => (
             <View key={domino.id} style={styles.dominoRow}>
-              <Text style={styles.dominoNumber}>{index + 1}</Text>
+              <View style={styles.dominoPipCap}>
+                <DominoPips count={index + 1} color={colors.accentBright} size={30} />
+              </View>
               <Text style={styles.dominoTitle}>{domino.title}</Text>
               <View style={styles.dominoProgress}>
                 {DAY_NAMES.map((_, dayIndex) => {
@@ -635,16 +638,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...elevation.md,
   },
-  dominoNumber: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: colors.onAccent,
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    textAlign: 'center',
-    lineHeight: 24,
+  dominoPipCap: {
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   dominoTitle: {

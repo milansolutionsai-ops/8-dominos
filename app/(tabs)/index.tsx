@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { DominoTile } from '@/components/DominoTile';
-import { DayNavigator } from '@/components/DayNavigator';
-import { ScoreDisplay } from '@/components/ScoreDisplay';
+import { DominoBoard } from '@/components/DominoBoard';
+import { HudHeader } from '@/components/HudHeader';
 import DailyJournal from '@/components/DailyJournal';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { useDominos } from '@/hooks/useDominos';
@@ -13,7 +12,8 @@ import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
 import MoodCheckIn from '@/components/MoodCheckIn';
 import { StorageService } from '@/utils/storage';
-import { colors } from '@/constants/theme';
+import { StatsService } from '@/utils/stats';
+import { colors, fonts, spacing } from '@/constants/theme';
 
 export default function DailyScreen() {
   const insets = useSafeAreaInsets();
@@ -90,16 +90,6 @@ export default function DailyScreen() {
     }, 0);
   };
 
-  const calculateWeeklyScore = () => {
-    const weekKey = DateUtils.getWeekKeyForDate(currentDate);
-    return dominos.reduce((score, domino) => {
-      const weekCompletion = domino.completionStatus[weekKey];
-      if (!weekCompletion) return score;
-
-      return score + Object.values(weekCompletion).filter(Boolean).length;
-    }, 0);
-  };
-
   useEffect(() => {
     const dailyScore = calculateDailyScore();
 
@@ -136,7 +126,7 @@ export default function DailyScreen() {
   }
 
   const dailyScore = calculateDailyScore();
-  const weeklyScore = calculateWeeklyScore();
+  const streak = StatsService.calculateStats(dominos).currentStreak;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -145,32 +135,29 @@ export default function DailyScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
       >
-        <DayNavigator
+        <HudHeader
           currentDate={currentDate}
           onDateChange={setCurrentDate}
-        />
-
-        <ScoreDisplay
           dailyScore={dailyScore}
           totalDaily={8}
-          weeklyScore={weeklyScore}
-          totalWeekly={56}
+          streak={streak}
         />
 
-        {/* Game board leads: the 8 dominoes are the primary action */}
-        {dominos.map((domino, index) => (
-          <DominoTile
-            key={domino.id}
-            title={domino.title}
-            activity={getCurrentDayActivity(domino)}
-            completed={getDominoCompletion(domino)}
-            onToggle={() => handleToggleCompletion(domino.id)}
-            index={index}
-            bumped={justCompletedIndex === index - 1}
-          />
-        ))}
+        {/* Game board leads: the 8 dominoes as a chain */}
+        <DominoBoard
+          items={dominos.map((domino) => ({
+            id: domino.id,
+            title: domino.title,
+            activity: getCurrentDayActivity(domino),
+            completed: getDominoCompletion(domino),
+          }))}
+          onToggle={handleToggleCompletion}
+          justCompletedIndex={justCompletedIndex}
+        />
 
         {/* Secondary: reflection + mood, below the board */}
+        <Text style={styles.sectionLabel}>REFLECTION</Text>
+
         <MoodCheckIn
           period="morning"
           savedMood={morningMood}
@@ -209,5 +196,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
+  },
+  sectionLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    letterSpacing: 1,
+    color: colors.textMuted,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+    marginHorizontal: spacing.lg,
   },
 });

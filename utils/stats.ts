@@ -75,36 +75,21 @@ export class StatsService {
             }
         });
 
-        // 3. Current Streak (working backwards from today)
-        // We check yesterday, day before, etc.
-        let streakActive = true;
-        let checkDate = new Date();
-        // Start from yesterday to allow for "today in progress"
-        // Or include today? Let's include today if completed, otherwise check yesterday.
-
-        // Simple Check: Loop back up to 365 days
+        // 3. Current Streak — consecutive days (ending today or yesterday) with at
+        // least one domino completed. Showing up keeps the chain alive.
         let streakCount = 0;
+        const cursor = new Date();
+        // Grace: if nothing is done yet today, start counting from yesterday.
+        if (this.getScoreForDate(dominos, cursor) === 0) {
+            cursor.setDate(cursor.getDate() - 1);
+        }
         for (let i = 0; i < 365; i++) {
-            // Check today first
-            if (i === 0) {
-                const todayScore = this.getScoreForDate(dominos, checkDate);
-                if (todayScore === 8) {
-                    streakCount++;
-                } else {
-                    // If today isn't perfect, we don't break streak yet, we just don't count it.
-                    // Streak is broken if YESTERDAY was not perfect.
-                }
-                checkDate.setDate(checkDate.getDate() - 1);
-                continue;
-            }
-
-            const score = this.getScoreForDate(dominos, checkDate);
-            if (score === 8) {
+            if (this.getScoreForDate(dominos, cursor) >= 1) {
                 streakCount++;
+                cursor.setDate(cursor.getDate() - 1);
             } else {
                 break;
             }
-            checkDate.setDate(checkDate.getDate() - 1);
         }
         currentStreak = streakCount;
 

@@ -15,9 +15,9 @@ import { Platform, TextStyle, ViewStyle } from 'react-native';
 
 // Raw brand colors (from 8dominos.com Elementor globals) — unchanged.
 export const brand = {
-  blue: '#046BD2',
-  blueDark: '#045CB4',
-  blueTint: '#3F73C8',
+  blue: '#0062FF',
+  blueDark: '#0052D6',
+  blueTint: '#3D82FF',
   navy: '#0D1F4F',
   slate800: '#1E293B',
   slate700: '#334155',
@@ -46,10 +46,10 @@ export const colors = {
   textInverse: '#0D1F4F', // text on light / accent fills
 
   // brand accent
-  accent: '#046BD2', // brand hero, the one true blue
-  accentBright: '#2E8BEF', // rings, glows, large fills on dark
-  accentPressed: '#045CB4',
-  accentSoft: 'rgba(46,139,239,0.16)', // tinted fills, selected chips
+  accent: '#0062FF', // brand hero — official 8dominos electric blue
+  accentBright: '#3D82FF', // rings, glows, large fills on dark
+  accentPressed: '#0052D6',
+  accentSoft: 'rgba(0,98,255,0.16)', // tinted fills, selected chips
   onAccent: '#FFFFFF',
 
   // states
@@ -59,8 +59,8 @@ export const colors = {
 
   // score ramp (brand-anchored blue luminance; gold crown at 8/8)
   scoreLow: '#3A4E74', // 0-3
-  scoreMid: '#2E6FC4', // 4-5
-  scoreHigh: '#2E8BEF', // 6-7
+  scoreMid: '#2F6BE0', // 4-5
+  scoreHigh: '#3D82FF', // 6-7
   scoreFull: '#F0B429', // 8, perfect (gold)
 
   // scrims / overlays
@@ -70,7 +70,7 @@ export const colors = {
 
 // Completed-tile gradient (135deg). Consumed via expo-linear-gradient.
 export const gradients = {
-  tileComplete: ['#2E8BEF', '#046BD2'] as const,
+  tileComplete: ['#3D82FF', '#0062FF'] as const,
 } as const;
 
 // Per-pillar signature tints (order = Body…Soul; subtle, system blue stays hero).
@@ -146,7 +146,7 @@ export const elevation = {
     default: {},
   }) as ViewStyle,
   accentGlow: Platform.select({
-    ios: { shadowColor: '#046BD2', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
+    ios: { shadowColor: '#0062FF', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
     android: { elevation: 10 },
     default: {},
   }) as ViewStyle,
