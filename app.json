@@ -41,8 +41,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ae3023ed-bbe8-4cf1-951b-4206dac30888"
+        "projectId": "45266bda-5346-40f2-b71a-9b87d2e3059a"
       }
-    }
+    },
+    "owner": "mile-dev-69"
   }
 }
