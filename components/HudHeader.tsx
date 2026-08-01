@@ -25,10 +25,10 @@ interface HudHeaderProps {
   dailyScore: number;
   totalDaily: number;
   streak: number;
+  onShare?: () => void;
 }
 
-export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak }: HudHeaderProps) {
-  const router = useRouter();
+export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak, onShare }: HudHeaderProps) {
   const pct = totalDaily > 0 ? (dailyScore / totalDaily) * 100 : 0;
   const color = scoreColor(pct);
   const offset = CIRC - (pct / 100) * CIRC;
@@ -82,8 +82,14 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
           <Text style={[styles.streakNum, { color: streak > 0 ? colors.textPrimary : colors.textMuted }]}>{streak}</Text>
         </View>
 
-        {Platform.OS !== 'web' && (
-          <TouchableOpacity style={styles.shareBtn} onPress={() => router.navigate('/weekly')} hitSlop={8}>
+        {Platform.OS !== 'web' && onShare && (
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={onShare}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share my day"
+          >
             <Share2 size={18} color={colors.onAccent} strokeWidth={2.5} />
           </TouchableOpacity>
         )}

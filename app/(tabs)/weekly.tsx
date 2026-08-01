@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { captureRef } from 'react-native-view-shot';
@@ -271,10 +271,12 @@ export default function WeeklyScreen() {
         </View>
 
         <ShareWeekCard ref={shareRef} data={shareData} />
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
-          <Share2 size={18} color={colors.onAccent} />
-          <Text style={styles.shareButtonText}>Share my week</Text>
-        </TouchableOpacity>
+        {Platform.OS !== 'web' && (
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
+            <Share2 size={18} color={colors.onAccent} />
+            <Text style={styles.shareButtonText}>Share my week</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.heatmapCardContainer}>
           <View style={styles.heatmapCard}>
