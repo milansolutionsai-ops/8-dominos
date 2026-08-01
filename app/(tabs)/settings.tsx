@@ -10,6 +10,13 @@ import { useDominos } from '@/hooks/useDominos';
 import { StorageService } from '@/utils/storage';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
+import { DominoPips } from '@/components/DominoPips';
+import { PILLAR_HINTS } from '@/types/domino';
+
+/** The eight pillars in domino order, Body = 1 … Soul = 8. */
+const PILLAR_ORDER = ['Body', 'Health', 'Happiness', 'Love', 'Work', 'Wealth', 'Spirituality', 'Soul'].map(
+  (name) => ({ name, hint: PILLAR_HINTS[name.toLowerCase()] })
+);
 import { colors, fonts } from '@/constants/theme';
 
 import { StatsService } from '@/utils/stats';
@@ -284,7 +291,23 @@ export default function SettingsScreen() {
               <Text style={styles.infoTitle}>The 8 Dominos Philosophy</Text>
             </View>
             <Text style={styles.infoDescription}>
-              Master eight fundamental life areas: physical health, mental wellness, relationships, career growth, financial stability, personal development, spirituality, and recreation. Small daily commitments compound into extraordinary life transformation.
+              Your life stands on eight dominos. Knock one down and it tips the next.
+            </Text>
+
+            <View style={styles.pillarList}>
+              {PILLAR_ORDER.map((pillar, i) => (
+                <View key={pillar.name} style={styles.pillarRow}>
+                  <View style={styles.pillarPip}>
+                    <DominoPips count={i + 1} color={colors.onAccent} size={15} />
+                  </View>
+                  <Text style={styles.pillarName}>{pillar.name}</Text>
+                  <Text style={styles.pillarHint}>{pillar.hint}</Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.infoDescription}>
+              Invest in one every day and the chain keeps falling. Little wins, compounded daily, lead to big wins in life.
             </Text>
             <Text style={styles.infoQuote}>“What if you did everything you said you would do? What would your life look like?”</Text>
             <TouchableOpacity onPress={() => Linking.openURL('https://8dominos.com')} activeOpacity={0.7}>
@@ -472,6 +495,35 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     color: colors.accent,
     marginTop: 12,
+  },
+  pillarList: {
+    marginTop: 14,
+    marginBottom: 14,
+    gap: 8,
+  },
+  pillarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pillarPip: {
+    width: 24,
+    height: 34,
+    borderRadius: 6,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  pillarName: {
+    fontSize: 14,
+    fontFamily: fonts.semibold,
+    color: colors.textPrimary,
+    width: 108,
+  },
+  pillarHint: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.textMuted,
   },
   versionCard: {
     backgroundColor: colors.surface,
