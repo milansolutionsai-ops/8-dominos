@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { DominoBoard } from '@/components/DominoBoard';
 import { HudHeader } from '@/components/HudHeader';
 import { ShareDayCard } from '@/components/ShareDayCard';
 import DailyJournal from '@/components/DailyJournal';
-import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { PerfectDayCelebration } from '@/components/PerfectDayCelebration';
 import { useDominos } from '@/hooks/useDominos';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
@@ -97,16 +96,10 @@ export default function DailyScreen() {
     const dailyScore = calculateDailyScore();
 
     if (dailyScore === 8 && previousScoreRef.current < 8) {
+      // Haptics for this moment are owned by PerfectDayCelebration (Success +
+      // a delayed Heavy) so the beats stay in sync with the animation.
       setShowConfetti(true);
       soundEffects.playPerfect();
-
-      if (Platform.OS !== 'web') {
-        try {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {
-          // Haptics not available
-        }
-      }
 
       // Update the ref BEFORE the early return, otherwise it keeps its pre-8
       // value and the celebration re-fires on the next re-render at 8/8.
@@ -194,8 +187,9 @@ export default function DailyScreen() {
         <DailyJournal currentDate={currentDate.toISOString().split('T')[0]} />
       </ScrollView>
 
-      <ConfettiCelebration
+      <PerfectDayCelebration
         trigger={showConfetti}
+        streak={streak}
         onComplete={() => setShowConfetti(false)}
       />
 

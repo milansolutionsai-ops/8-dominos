@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Flame, Share2, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
 import { dailyMessage } from '@/utils/motivation';
