@@ -83,7 +83,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
             >
                 <View style={styles.headerLeft}>
                     <PenLine size={20} color={colors.onAccent} />
-                    <Text style={styles.headerTitle}>Today’s Journal</Text>
+                    <Text style={styles.headerTitle}>Today’s Reflection</Text>
                 </View>
                 {isExpanded ? (
                     <ChevronUp size={20} color={colors.onAccent} />
@@ -96,7 +96,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
                 <TextInput
                     style={styles.input}
                     multiline
-                    placeholder="How was your day? What did you accomplish? How do you feel?"
+                    placeholder="What are you grateful for today? A specific moment in your day that stood out that you want to give gratitude towards."
                     placeholderTextColor={colors.textMuted}
                     value={journalText}
                     onChangeText={setJournalText}

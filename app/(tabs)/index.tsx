@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Haptics from 'expo-haptics';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { DominoBoard } from '@/components/DominoBoard';
 import { HudHeader } from '@/components/HudHeader';
+import { ShareDayCard } from '@/components/ShareDayCard';
 import DailyJournal from '@/components/DailyJournal';
-import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { PerfectDayCelebration } from '@/components/PerfectDayCelebration';
 import { useDominos } from '@/hooks/useDominos';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
@@ -94,26 +96,37 @@ export default function DailyScreen() {
     const dailyScore = calculateDailyScore();
 
     if (dailyScore === 8 && previousScoreRef.current < 8) {
+      // Haptics for this moment are owned by PerfectDayCelebration (Success +
+      // a delayed Heavy) so the beats stay in sync with the animation.
       setShowConfetti(true);
       soundEffects.playPerfect();
 
-      if (Platform.OS !== 'web') {
-        try {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } catch {
-          // Haptics not available
-        }
-      }
+      // Update the ref BEFORE the early return, otherwise it keeps its pre-8
+      // value and the celebration re-fires on the next re-render at 8/8.
+      previousScoreRef.current = dailyScore;
 
       const timer = setTimeout(() => {
         setShowConfetti(false);
-      }, 3000);
+      }, 3400);
 
       return () => clearTimeout(timer);
     }
 
     previousScoreRef.current = dailyScore;
   }, [dominos]);
+
+  const shareDayRef = useRef<View>(null);
+
+  const handleShareDay = async () => {
+    try {
+      const uri = await captureRef(shareDayRef, { format: 'png', quality: 1 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch (error) {
+      console.error('Error sharing day:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -141,6 +154,7 @@ export default function DailyScreen() {
           dailyScore={dailyScore}
           totalDaily={8}
           streak={streak}
+          onShare={handleShareDay}
         />
 
         {/* Game board leads: the 8 dominoes as a chain */}
@@ -173,10 +187,28 @@ export default function DailyScreen() {
         <DailyJournal currentDate={currentDate.toISOString().split('T')[0]} />
       </ScrollView>
 
-      <ConfettiCelebration
+      <PerfectDayCelebration
         trigger={showConfetti}
-        onComplete={() => console.log('Confetti done')}
+        streak={streak}
+        onComplete={() => setShowConfetti(false)}
       />
+
+      {/* Off-screen capture target for "Share my day" — laid out but never seen. */}
+      <View style={styles.captureHost} pointerEvents="none">
+        <ShareDayCard
+          ref={shareDayRef}
+          data={{
+            dateLabel: DateUtils.formatDate(currentDate),
+            score: dailyScore,
+            total: 8,
+            streak,
+            pillars: dominos.map((domino) => ({
+              title: domino.title,
+              completed: getDominoCompletion(domino),
+            })),
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -185,6 +217,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  captureHost: {
+    position: 'absolute',
+    left: -10000,
+    top: 0,
   },
   loading: {
     flex: 1,

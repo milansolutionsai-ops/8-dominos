@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Flame, Share2, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
+import { dailyMessage } from '@/utils/motivation';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 
 const RING = 60;
@@ -18,24 +18,16 @@ function scoreColor(pct: number): string {
   return colors.scoreLow;
 }
 
-function motivation(score: number): string {
-  if (score >= 8) return 'Perfect day. All dominos down.';
-  if (score >= 6) return 'Strong momentum. Keep going.';
-  if (score >= 4) return 'Halfway there.';
-  if (score >= 1) return 'Good start. Stack your wins.';
-  return 'Tap a domino to start the chain.';
-}
-
 interface HudHeaderProps {
   currentDate: Date;
   onDateChange: (d: Date) => void;
   dailyScore: number;
   totalDaily: number;
   streak: number;
+  onShare?: () => void;
 }
 
-export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak }: HudHeaderProps) {
-  const router = useRouter();
+export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak, onShare }: HudHeaderProps) {
   const pct = totalDaily > 0 ? (dailyScore / totalDaily) * 100 : 0;
   const color = scoreColor(pct);
   const offset = CIRC - (pct / 100) * CIRC;
@@ -82,15 +74,21 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
           </View>
         </View>
 
-        <Text style={styles.motivation} numberOfLines={2}>{motivation(dailyScore)}</Text>
+        <Text style={styles.motivation} numberOfLines={2}>{dailyMessage(dailyScore, totalDaily)}</Text>
 
         <View style={styles.streakChip}>
           <Flame size={18} color={streak > 0 ? colors.warning : colors.textMuted} strokeWidth={2.5} />
           <Text style={[styles.streakNum, { color: streak > 0 ? colors.textPrimary : colors.textMuted }]}>{streak}</Text>
         </View>
 
-        {Platform.OS !== 'web' && (
-          <TouchableOpacity style={styles.shareBtn} onPress={() => router.navigate('/weekly')} hitSlop={8}>
+        {Platform.OS !== 'web' && onShare && (
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={onShare}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share my day"
+          >
             <Share2 size={18} color={colors.onAccent} strokeWidth={2.5} />
           </TouchableOpacity>
         )}

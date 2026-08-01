@@ -55,6 +55,7 @@ export const ShareWeekCard = forwardRef<View, { data: ShareWeekData }>(({ data }
       </View>
 
       <Text style={styles.footer}>Body · Health · Happiness · Love · Work · Wealth · Spirituality · Soul</Text>
+      <Text style={styles.url}>8dominos.com</Text>
     </View>
   );
 });
@@ -158,6 +159,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.lg,
+    letterSpacing: 0.3,
+  },
+  url: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.accent,
+    textAlign: 'center',
+    marginTop: spacing.sm,
     letterSpacing: 0.3,
   },
 });
