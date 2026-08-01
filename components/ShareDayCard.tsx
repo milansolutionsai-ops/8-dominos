@@ -60,7 +60,7 @@ export const ShareDayCard = forwardRef<View, { data: ShareDayData }>(({ data }, 
               <DominoPips
                 count={i + 1}
                 color={pillar.completed ? colors.onAccent : colors.textMuted}
-                size={16}
+                size={14}
               />
             </View>
             <Text

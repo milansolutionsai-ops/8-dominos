@@ -98,7 +98,7 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
       >
         <View style={[styles.tile, styles.tileEmpty]}>
           <View style={styles.pipCap}>
-            <DominoPips count={pipCount} color={colors.textMuted} size={40} />
+            <DominoPips count={pipCount} color={colors.textMuted} size={26} />
           </View>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.content}>
@@ -128,7 +128,7 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
 
         {/* Left half of the domino: the pip face (pillar identity). */}
         <View style={styles.pipCap}>
-          <DominoPips count={pipCount} color={pipColor} size={44} />
+          <DominoPips count={pipCount} color={pipColor} size={28} />
         </View>
 
         {/* Divider down the middle — the domino line. */}

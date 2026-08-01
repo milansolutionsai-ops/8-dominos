@@ -298,7 +298,7 @@ export default function SettingsScreen() {
               {PILLAR_ORDER.map((pillar, i) => (
                 <View key={pillar.name} style={styles.pillarRow}>
                   <View style={styles.pillarPip}>
-                    <DominoPips count={i + 1} color={colors.onAccent} size={15} />
+                    <DominoPips count={i + 1} color={colors.onAccent} size={14} />
                   </View>
                   <Text style={styles.pillarName}>{pillar.name}</Text>
                   <Text style={styles.pillarHint}>{pillar.hint}</Text>

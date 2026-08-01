@@ -51,7 +51,7 @@ export default function QuoteSplash({ onComplete }: QuoteSplashProps) {
                                 key={n}
                                 style={[styles.chainTile, lit && styles.chainTileLit, { transform: [{ rotate: `${i * 6 - 10}deg` }] }]}
                             >
-                                <DominoPips count={n} color={lit ? colors.onAccent : colors.textMuted} size={16} />
+                                <DominoPips count={n} color={lit ? colors.onAccent : colors.textMuted} size={14} />
                             </View>
                         );
                     })}

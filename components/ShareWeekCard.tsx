@@ -49,7 +49,7 @@ export const ShareWeekCard = forwardRef<View, { data: ShareWeekData }>(({ data }
       <View style={styles.chain}>
         {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
           <View key={n} style={styles.chainTile}>
-            <DominoPips count={n} color={colors.onAccent} size={14} />
+            <DominoPips count={n} color={colors.onAccent} size={13} />
           </View>
         ))}
       </View>

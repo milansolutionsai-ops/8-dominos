@@ -366,7 +366,7 @@ export default function WeeklyScreen() {
           {dominos.map((domino, index) => (
             <View key={domino.id} style={styles.dominoRow}>
               <View style={styles.dominoPipCap}>
-                <DominoPips count={index + 1} color={colors.accentBright} size={30} />
+                <DominoPips count={index + 1} color={colors.accentBright} size={15} />
               </View>
               <Text style={styles.dominoTitle}>{domino.title}</Text>
               <View style={styles.dominoProgress}>
