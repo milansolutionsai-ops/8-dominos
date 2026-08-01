@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Save, Settings } from 'lucide-react-native';
-import { Domino, DayOfWeek, DAYS_OF_WEEK, DAY_NAMES } from '@/types/domino';
+import { Domino, DayOfWeek, DAYS_OF_WEEK, DAY_NAMES, FULL_DAY_NAMES, PILLAR_HINTS } from '@/types/domino';
 import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
+
+/**
+ * "What can you do to invest in your BODY (Physically) on Tuesday?"
+ * Falls back gracefully if a pillar title isn't in the hint map.
+ */
+function activityPrompt(title: string, day: DayOfWeek): string {
+  const fullDay = FULL_DAY_NAMES[DAYS_OF_WEEK.indexOf(day)];
+  const hint = PILLAR_HINTS[title.toLowerCase()];
+  const pillar = hint ? `${title.toUpperCase()} (${hint})` : title.toUpperCase();
+  return `What can you do to invest in your ${pillar} on ${fullDay}?`;
+}
 
 interface DominoSetupFormProps {
   dominos: Domino[];
@@ -113,7 +124,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
 
             <TextInput
               style={[styles.activityInput, focusedId === domino.id && styles.activityInputFocused]}
-              placeholder={`Enter ${domino.title.toLowerCase()} activity for ${DAY_NAMES[DAYS_OF_WEEK.indexOf(selectedDay)]}`}
+              placeholder={activityPrompt(domino.title, selectedDay)}
               value={domino.activities[selectedDay]}
               onChangeText={(text: string) => updateDominoActivity(domino.id, selectedDay, text)}
               onFocus={() => setFocusedId(domino.id)}
@@ -268,7 +279,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     color: colors.textPrimary,
     backgroundColor: colors.bg,
-    minHeight: 60,
+    minHeight: 84,
     textAlignVertical: 'top',
   },
   activityInputFocused: {

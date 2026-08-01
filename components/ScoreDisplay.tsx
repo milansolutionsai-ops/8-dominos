@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { useSharedValue, withTiming, withSpring } from 'react-native-reanimated';
+import { dailyMessage } from '@/utils/motivation';
 import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface ScoreDisplayProps {
@@ -23,14 +24,6 @@ function getScoreColor(percentage: number): string {
   if (percentage >= 75) return colors.scoreHigh;
   if (percentage >= 50) return colors.scoreMid;
   return colors.scoreLow;
-}
-
-function getMotivationalMessage(score: number): string {
-  if (score === 8) return 'Perfect day. All dominos down.';
-  if (score >= 6) return 'Great progress. Keep going.';
-  if (score >= 4) return 'Halfway there.';
-  if (score >= 1) return 'Good start. Stack those wins.';
-  return 'Start stacking your wins.';
 }
 
 export function ScoreDisplay({
@@ -135,7 +128,7 @@ export function ScoreDisplay({
 
       <View style={styles.motivationalSection}>
         <Text style={styles.motivationalText}>
-          {getMotivationalMessage(dailyScore)}
+          {dailyMessage(dailyScore, totalDaily)}
         </Text>
       </View>
     </View>

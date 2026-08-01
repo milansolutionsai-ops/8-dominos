@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Switch, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -286,7 +286,10 @@ export default function SettingsScreen() {
             <Text style={styles.infoDescription}>
               Master eight fundamental life areas: physical health, mental wellness, relationships, career growth, financial stability, personal development, spirituality, and recreation. Small daily commitments compound into extraordinary life transformation.
             </Text>
-            <Text style={styles.infoQuote}>“What if you actually did everything you said you would?”</Text>
+            <Text style={styles.infoQuote}>“What if you did everything you said you would do? What would your life look like?”</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://8dominos.com')} activeOpacity={0.7}>
+              <Text style={styles.infoLink}>8dominos.com</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.versionCard}>
@@ -463,6 +466,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     fontStyle: 'italic',
+  },
+  infoLink: {
+    fontSize: 14,
+    fontFamily: fonts.semibold,
+    color: colors.accent,
+    marginTop: 12,
   },
   versionCard: {
     backgroundColor: colors.surface,

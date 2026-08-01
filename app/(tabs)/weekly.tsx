@@ -13,6 +13,7 @@ import { DateUtils } from '@/utils/dateUtils';
 import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
 import MoodTrendChart from '@/components/MoodTrendChart';
 import { StorageService } from '@/utils/storage';
+import { weeklyMessage } from '@/utils/motivation';
 import { colors, fonts, elevation } from '@/constants/theme';
 
 interface WeeklyOverviewProps {
@@ -205,29 +206,7 @@ export default function WeeklyScreen() {
     }
   };
 
-  const getMotivationalContent = () => {
-    if (weeklyPercentage === 100) {
-      return {
-        title: '🔥 Perfect Week!',
-        message: 'Incredible discipline and commitment! You\'ve dominated every single day.',
-      };
-    } else if (weeklyPercentage >= 75) {
-      return {
-        title: '💪 Strong Performance!',
-        message: 'Solid week of progress. Keep this momentum going next week!',
-      };
-    } else if (weeklyPercentage >= 50) {
-      return {
-        title: '⚡ Keep Building!',
-        message: 'Halfway there! You\'re building a foundation for greatness.',
-      };
-    } else {
-      return {
-        title: '🎯 Let\'s Level Up!',
-        message: 'Every champion started somewhere. Your consistency wins the race.',
-      };
-    }
-  };
+  const getMotivationalContent = () => weeklyMessage(weeklyPercentage);
 
   const getBarColor = (percentage: number) => {
     if (percentage === 100) return colors.scoreFull;

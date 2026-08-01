@@ -4,6 +4,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, Flame, Share2, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
+import { dailyMessage } from '@/utils/motivation';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 
 const RING = 60;
@@ -16,14 +17,6 @@ function scoreColor(pct: number): string {
   if (pct >= 75) return colors.scoreHigh;
   if (pct >= 50) return colors.scoreMid;
   return colors.scoreLow;
-}
-
-function motivation(score: number): string {
-  if (score >= 8) return 'Perfect day. All dominos down.';
-  if (score >= 6) return 'Strong momentum. Keep going.';
-  if (score >= 4) return 'Halfway there.';
-  if (score >= 1) return 'Good start. Stack your wins.';
-  return 'Tap a domino to start the chain.';
 }
 
 interface HudHeaderProps {
@@ -82,7 +75,7 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
           </View>
         </View>
 
-        <Text style={styles.motivation} numberOfLines={2}>{motivation(dailyScore)}</Text>
+        <Text style={styles.motivation} numberOfLines={2}>{dailyMessage(dailyScore, totalDaily)}</Text>
 
         <View style={styles.streakChip}>
           <Flame size={18} color={streak > 0 ? colors.warning : colors.textMuted} strokeWidth={2.5} />
