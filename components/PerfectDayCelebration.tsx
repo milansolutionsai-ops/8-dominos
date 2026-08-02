@@ -138,10 +138,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 26,
     color: colors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: fonts.medium,

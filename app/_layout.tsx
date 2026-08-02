@@ -7,6 +7,7 @@ import {
   Poppins_500Medium,
   Poppins_600SemiBold,
   Poppins_700Bold,
+  Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { soundEffects } from '@/utils/soundEffects';
@@ -19,6 +20,7 @@ export default function RootLayout() {
     Poppins_500Medium,
     Poppins_600SemiBold,
     Poppins_700Bold,
+    Poppins_800ExtraBold,
   });
 
   useEffect(() => {

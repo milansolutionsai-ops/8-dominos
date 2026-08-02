@@ -3,10 +3,14 @@ import { Platform, TextStyle, ViewStyle } from 'react-native';
 /**
  * 8 Dominos design system — single source of truth for color, type, spacing, motion.
  *
- * Palette is the refined navy-dark direction from the Claude design pass (Batch 0),
- * derived from the live brand at https://8dominos.com:
- *   brand blue #046BD2 · hover #045CB4 · navy #0D1F4F · slate #1E293B/#334155
- *   cream #F7F3EA · light-blue tint #F0F5FA · font Poppins
+ * Palette is the refined navy-dark direction, aligned to the live brand at
+ * https://8dominos.com (launched):
+ *   logo blue #0062FF (the app's accent) · site content blue #3F73C8
+ *   navy #0D1F4F (shared with the site) · slate #1E293B/#334155 · font Poppins
+ *
+ * Note: the site is light-themed, so it uses the softer #3F73C8 on white. The
+ * app is navy-dark, where that reads muddy — so the logo blue #0062FF is the
+ * accent here. Navy is identical across both.
  *
  * Direction: navy surface + brand-blue accent (premium, game-first, on-brand).
  * A light "daytime" theme can ship later as a one-file variant. Components must
@@ -84,12 +88,14 @@ export const fonts = {
   medium: 'Poppins_500Medium',
   semibold: 'Poppins_600SemiBold',
   bold: 'Poppins_700Bold',
+  /** Display weight — matches the headings on 8dominos.com. */
+  extrabold: 'Poppins_800ExtraBold',
 } as const;
 
 // Type scale (Poppins). Size-specific tracking: large text negative, body near zero.
 export const type = {
-  display: { fontFamily: fonts.bold, fontSize: 34, lineHeight: 40, letterSpacing: -0.5 },
-  h1: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
+  display: { fontFamily: fonts.extrabold, fontSize: 34, lineHeight: 40, letterSpacing: -0.8 },
+  h1: { fontFamily: fonts.extrabold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6 },
   h2: { fontFamily: fonts.semibold, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
   h3: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, letterSpacing: -0.1 },
   bodyLg: { fontFamily: fonts.medium, fontSize: 17, lineHeight: 25, letterSpacing: 0 },

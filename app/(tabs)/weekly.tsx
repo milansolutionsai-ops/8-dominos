@@ -420,9 +420,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerTitle: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 28,
     color: colors.textPrimary,
+    letterSpacing: -0.6,
   },
   weekBadge: {
     backgroundColor: colors.surfaceMuted,

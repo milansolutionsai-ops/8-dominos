@@ -11,11 +11,11 @@ import { StorageService } from '@/utils/storage';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
 import { DominoPips } from '@/components/DominoPips';
-import { PILLAR_HINTS } from '@/types/domino';
+import { PILLAR_DESCRIPTORS } from '@/types/domino';
 
-/** The eight pillars in domino order, Body = 1 … Soul = 8. */
+/** The eight pillars in domino order, Body = 1 … Soul = 8. Copy matches 8dominos.com. */
 const PILLAR_ORDER = ['Body', 'Health', 'Happiness', 'Love', 'Work', 'Wealth', 'Spirituality', 'Soul'].map(
-  (name) => ({ name, hint: PILLAR_HINTS[name.toLowerCase()] })
+  (name) => ({ name, hint: PILLAR_DESCRIPTORS[name.toLowerCase()] })
 );
 import { colors, fonts } from '@/constants/theme';
 
@@ -307,7 +307,7 @@ export default function SettingsScreen() {
             </View>
 
             <Text style={styles.infoDescription}>
-              Invest in one every day and the chain keeps falling. Little wins, compounded daily, lead to big wins in life.
+              It’s not about doing more. It’s about doing what matters one day at a time, until your life reflects it.
             </Text>
             <Text style={styles.infoQuote}>“What if you did everything you said you would do? What would your life look like?”</Text>
             <TouchableOpacity onPress={() => Linking.openURL('https://8dominos.com')} activeOpacity={0.7}>
@@ -518,9 +518,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.semibold,
     color: colors.textPrimary,
-    width: 108,
+    width: 104,
   },
   pillarHint: {
+    flex: 1,
     fontSize: 13,
     fontFamily: fonts.medium,
     color: colors.textMuted,

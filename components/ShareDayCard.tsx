@@ -105,11 +105,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   heading: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 30,
     color: colors.textPrimary,
     marginTop: spacing.sm,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   range: {
     fontFamily: fonts.medium,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xl,
   },
   score: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 64,
     letterSpacing: -2,
     fontVariant: ['tabular-nums'],

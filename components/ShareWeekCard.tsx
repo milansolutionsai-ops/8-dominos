@@ -80,11 +80,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   heading: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 30,
     color: colors.textPrimary,
     marginTop: spacing.sm,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   range: {
     fontFamily: fonts.medium,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xl,
   },
   percent: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.extrabold,
     fontSize: 60,
     color: colors.accent,
     letterSpacing: -2,
