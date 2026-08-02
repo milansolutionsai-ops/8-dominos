@@ -207,6 +207,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
+    // Clips the off-screen capture host below; without this it extends the
+    // page bounds on web and the layout scrolls/crops oddly.
+    overflow: 'hidden',
   },
   captureHost: {
     position: 'absolute',
