@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { ChevronLeft, ChevronRight, Flame, Share2, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
@@ -81,7 +81,7 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
           <Text style={[styles.streakNum, { color: streak > 0 ? colors.textPrimary : colors.textMuted }]}>{streak}</Text>
         </View>
 
-        {Platform.OS !== 'web' && onShare && (
+        {onShare && (
           <TouchableOpacity
             style={styles.shareBtn}
             onPress={onShare}

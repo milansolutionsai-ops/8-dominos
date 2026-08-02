@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
+import { shareCard } from '@/utils/shareCard';
 import { DominoBoard } from '@/components/DominoBoard';
 import { HudHeader } from '@/components/HudHeader';
 import { ShareDayCard } from '@/components/ShareDayCard';
@@ -117,16 +116,7 @@ export default function DailyScreen() {
 
   const shareDayRef = useRef<View>(null);
 
-  const handleShareDay = async () => {
-    try {
-      const uri = await captureRef(shareDayRef, { format: 'png', quality: 1 });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
-      }
-    } catch (error) {
-      console.error('Error sharing day:', error);
-    }
-  };
+  const handleShareDay = () => shareCard(shareDayRef, '8dominos-my-day.png');
 
   if (loading) {
     return (
