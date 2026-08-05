@@ -115,6 +115,10 @@ const styles = StyleSheet.create({
         borderColor: colors.accentBright,
     },
     quoteContainer: {
+        // width is required: with only maxWidth the container shrink-wraps to
+        // its text inside a centered parent, so long quotes overflow the screen
+        // instead of wrapping.
+        width: '100%',
         alignItems: 'center',
         maxWidth: 600,
     },
