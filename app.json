@@ -14,8 +14,12 @@
       "backgroundColor": "#060D1C"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.hasslogics.eightdominos"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hasslogics.eightdominos",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.hasslogics.eightdominos",
