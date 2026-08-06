@@ -59,9 +59,15 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
     if (toppleSignal && !reduceMotion) knock(-11); // Perfect Day wave
   }, [toppleSignal]);
 
+  // Transform lives on the shadow wrapper and the animated border on the inner
+  // tile, because the tile clips (overflow:'hidden' -> masksToBounds on iOS)
+  // and a clipping layer throws away its own shadow.
+  const wrapStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${topple.value}deg` }, { scale: press.value }],
+  }));
+
   const tileStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(fill.value, [0, 1], [colors.border, colors.accentBright]),
-    transform: [{ rotate: `${topple.value}deg` }, { scale: press.value }],
   }));
 
   const gradientStyle = useAnimatedStyle(() => ({ opacity: fill.value }));
@@ -116,33 +122,35 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
       style={styles.container}
     >
       <AnimatedPressable
-        style={[styles.tile, tileStyle, completed ? elevation.accentGlow : elevation.sm]}
+        style={[styles.shadowWrap, wrapStyle, completed ? elevation.accentGlow : elevation.sm]}
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        {/* Lit blue gradient fades in on completion (the "domino lights up"). */}
-        <Animated.View style={[StyleSheet.absoluteFill, styles.gradientWrap, gradientStyle]} pointerEvents="none">
-          <LinearGradient colors={gradients.tileComplete} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <Animated.View style={[styles.tile, tileStyle]}>
+          {/* Lit blue gradient fades in on completion (the "domino lights up"). */}
+          <Animated.View style={[StyleSheet.absoluteFill, styles.gradientWrap, gradientStyle]} pointerEvents="none">
+            <LinearGradient colors={gradients.tileComplete} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+          </Animated.View>
+
+          {/* Left half of the domino: the pip face (pillar identity). */}
+          <View style={styles.pipCap}>
+            <DominoPips count={pipCount} color={pipColor} size={28} />
+          </View>
+
+          {/* Divider down the middle — the domino line. */}
+          <View style={[styles.divider, { backgroundColor: dividerColor }]} />
+
+          {/* Right half: the habit. */}
+          <View style={styles.content}>
+            <Text style={[styles.pillarLabel, { color: contentColor, opacity: completed ? 0.85 : 0.55 }]}>
+              {title}
+            </Text>
+            <Text style={[styles.activityText, { color: contentColor, opacity: completed ? 1 : 0.92 }]} numberOfLines={2}>
+              {activity}
+            </Text>
+          </View>
         </Animated.View>
-
-        {/* Left half of the domino: the pip face (pillar identity). */}
-        <View style={styles.pipCap}>
-          <DominoPips count={pipCount} color={pipColor} size={28} />
-        </View>
-
-        {/* Divider down the middle — the domino line. */}
-        <View style={[styles.divider, { backgroundColor: dividerColor }]} />
-
-        {/* Right half: the habit. */}
-        <View style={styles.content}>
-          <Text style={[styles.pillarLabel, { color: contentColor, opacity: completed ? 0.85 : 0.55 }]}>
-            {title}
-          </Text>
-          <Text style={[styles.activityText, { color: contentColor, opacity: completed ? 1 : 0.92 }]} numberOfLines={2}>
-            {activity}
-          </Text>
-        </View>
       </AnimatedPressable>
     </Animated.View>
   );
@@ -151,6 +159,15 @@ export function DominoTile({ title, activity, completed, onToggle, index, bumped
 const styles = StyleSheet.create({
   container: {
     marginVertical: 5,
+  },
+  /**
+   * Carries the shadow and the transform. Must NOT clip: `overflow:'hidden'`
+   * sets masksToBounds on iOS, which discards the layer's own shadow. Needs an
+   * opaque fill + matching radius so iOS can derive a correct shadow path.
+   */
+  shadowWrap: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
   },
   tile: {
     flexDirection: 'row',

@@ -1,19 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    Animated,
+    Alert,
+    LayoutChangeEvent,
+} from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { ChevronDown, ChevronUp, PenLine, Check } from 'lucide-react-native';
 import { StorageService } from '../utils/storage';
-import { colors, fonts, elevation } from '@/constants/theme';
+import { colors, fonts, type, spacing, radius, elevation, motion } from '@/constants/theme';
 
 interface DailyJournalProps {
     currentDate: string;
 }
 
 export default function DailyJournal({ currentDate }: DailyJournalProps) {
+    const reduceMotion = useReducedMotion();
     const [isExpanded, setIsExpanded] = useState(false);
     const [journalText, setJournalText] = useState('');
     const [savedText, setSavedText] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
+    // Measured, not guessed: a fixed max height clipped long entries with no
+    // way to scroll to the rest of them.
+    const [contentHeight, setContentHeight] = useState(0);
 
     const animationController = useRef(new Animated.Value(0)).current;
 
@@ -24,13 +38,8 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
     const loadJournalEntry = async () => {
         try {
             const entry = await StorageService.getJournalEntry(currentDate);
-            if (entry) {
-                setJournalText(entry);
-                setSavedText(entry);
-            } else {
-                setJournalText('');
-                setSavedText('');
-            }
+            setJournalText(entry ?? '');
+            setSavedText(entry ?? '');
         } catch (error) {
             console.error('Error loading journal entry:', error);
         }
@@ -38,15 +47,26 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
 
     const toggleExpand = () => {
         const toValue = isExpanded ? 0 : 1;
+        setIsExpanded(!isExpanded);
+
+        if (reduceMotion) {
+            animationController.setValue(toValue);
+            return;
+        }
 
         Animated.timing(animationController, {
             toValue,
-            duration: 300,
+            // Closing is quicker than opening: the user already knows what is
+            // behind them, they just want it out of the way.
+            duration: toValue === 1 ? motion.durationBase : 180,
             useNativeDriver: false,
         }).start();
-
-        setIsExpanded(!isExpanded);
     };
+
+    const onMeasureContent = useCallback((e: LayoutChangeEvent) => {
+        const h = Math.round(e.nativeEvent.layout.height);
+        setContentHeight(prev => (Math.abs(prev - h) > 1 ? h : prev));
+    }, []);
 
     const handleSave = async () => {
         if (journalText === savedText) return;
@@ -56,12 +76,9 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
             await StorageService.saveJournalEntry(currentDate, journalText);
             setSavedText(journalText);
             setShowSavedConfirmation(true);
-
-            setTimeout(() => {
-                setShowSavedConfirmation(false);
-            }, 2000);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to save journal entry');
+            setTimeout(() => setShowSavedConfirmation(false), 2000);
+        } catch {
+            Alert.alert('Couldn’t save', 'Your reflection didn’t save. Try again in a moment.');
         } finally {
             setIsSaving(false);
         }
@@ -69,7 +86,7 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
 
     const bodyHeight = animationController.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 300], // Adjust max height as needed
+        outputRange: [0, contentHeight || 1],
     });
 
     const hasUnsavedChanges = journalText !== savedText;
@@ -80,46 +97,58 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
                 style={styles.header}
                 onPress={toggleExpand}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Today’s Reflection"
+                accessibilityState={{ expanded: isExpanded }}
+                accessibilityHint={isExpanded ? 'Collapses the reflection' : 'Opens the reflection to write in'}
             >
                 <View style={styles.headerLeft}>
-                    <PenLine size={20} color={colors.onAccent} />
+                    <PenLine size={20} color={colors.accentBright} />
                     <Text style={styles.headerTitle}>Today’s Reflection</Text>
                 </View>
                 {isExpanded ? (
-                    <ChevronUp size={20} color={colors.onAccent} />
+                    <ChevronUp size={20} color={colors.textSecondary} />
                 ) : (
-                    <ChevronDown size={20} color={colors.onAccent} />
+                    <ChevronDown size={20} color={colors.textSecondary} />
                 )}
             </TouchableOpacity>
 
             <Animated.View style={[styles.body, { height: bodyHeight, opacity: animationController }]}>
-                <TextInput
-                    style={styles.input}
-                    multiline
-                    placeholder="What are you grateful for today? A specific moment in your day that stood out that you want to give gratitude towards."
-                    placeholderTextColor={colors.textMuted}
-                    value={journalText}
-                    onChangeText={setJournalText}
-                    textAlignVertical="top"
-                />
+                {/* Absolutely positioned so its natural height can be measured
+                    without the collapsed parent constraining it. */}
+                <View style={styles.measure} onLayout={onMeasureContent}>
+                    <TextInput
+                        style={styles.input}
+                        multiline
+                        placeholder="What are you grateful for today? A specific moment in your day that stood out that you want to give gratitude towards."
+                        placeholderTextColor={colors.textMuted}
+                        value={journalText}
+                        onChangeText={setJournalText}
+                        textAlignVertical="top"
+                        accessibilityLabel="Today’s reflection"
+                    />
 
-                <View style={styles.footer}>
-                    {hasUnsavedChanges && (
-                        <TouchableOpacity
-                            style={styles.saveButton}
-                            onPress={handleSave}
-                            disabled={isSaving}
-                        >
-                            <Check size={16} color={colors.onAccent} />
-                            <Text style={styles.saveButtonText}>
-                                {isSaving ? 'Saving...' : 'Save Entry'}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
+                    <View style={styles.footer}>
+                        {hasUnsavedChanges && (
+                            <TouchableOpacity
+                                style={styles.saveButton}
+                                onPress={handleSave}
+                                disabled={isSaving}
+                                accessibilityRole="button"
+                                accessibilityLabel={isSaving ? 'Saving reflection' : 'Save reflection'}
+                                accessibilityState={{ disabled: isSaving, busy: isSaving }}
+                            >
+                                <Check size={16} color={colors.onAccent} />
+                                <Text style={styles.saveButtonText}>
+                                    {isSaving ? 'Saving…' : 'Save Entry'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
 
-                    {showSavedConfirmation && !hasUnsavedChanges && (
-                        <Text style={styles.savedText}>Saved ✓</Text>
-                    )}
+                        {showSavedConfirmation && !hasUnsavedChanges && (
+                            <Text style={styles.savedText} accessibilityLiveRegion="polite">Saved</Text>
+                        )}
+                    </View>
                 </View>
             </Animated.View>
         </View>
@@ -128,12 +157,12 @@ export default function DailyJournal({ currentDate }: DailyJournalProps) {
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 20,
-        marginBottom: 16,
-        borderRadius: 16,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.lg,
+        borderRadius: radius.lg,
         overflow: 'hidden',
         backgroundColor: colors.surface,
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: colors.border,
         ...elevation.md,
     },
@@ -141,61 +170,60 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.accent,
-        padding: 16,
-        borderBottomWidth: 2, // Ideally this only shows when expanded, but keeping it simple
-        borderBottomColor: colors.border,
+        // Was a solid accent fill, which put the journal at the same visual
+        // weight as the primary CTA and the completed tiles.
+        backgroundColor: colors.surfaceAlt,
+        padding: spacing.lg,
+        minHeight: 56,
     },
     headerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: spacing.md,
     },
     headerTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        fontFamily: fonts.bold,
-        color: colors.onAccent,
+        ...type.h4,
+        color: colors.textPrimary,
     },
     body: {
         overflow: 'hidden',
     },
+    measure: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+    },
     input: {
-        flex: 1,
-        padding: 16,
-        fontSize: 15,
+        ...type.body,
+        padding: spacing.lg,
         color: colors.textPrimary,
-        fontFamily: fonts.regular,
         minHeight: 150,
     },
     footer: {
-        padding: 16,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.lg,
         flexDirection: 'row',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        minHeight: 60,
+        minHeight: 44,
     },
     saveButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: colors.accent,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.accent,
-        gap: 8,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.md,
+        gap: spacing.sm,
+        minHeight: 44,
     },
     saveButtonText: {
-        fontSize: 14,
-        fontFamily: fonts.bold,
-        fontWeight: '700',
+        ...type.bodySmStrong,
         color: colors.onAccent,
     },
     savedText: {
-        fontSize: 14,
-        fontFamily: fonts.bold,
-        fontWeight: '700',
+        ...type.bodySmStrong,
         color: colors.success,
     },
 });

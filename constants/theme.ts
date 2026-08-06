@@ -61,10 +61,18 @@ export const colors = {
   warning: '#F0B429',
   danger: '#EF5A54',
 
-  // score ramp (brand-anchored blue luminance; gold crown at 8/8)
-  scoreLow: '#3A4E74', // 0-3
+  // Score ramp (brand-anchored blue luminance; gold crown at 8/8).
+  //
+  // Tuned for contrast and step separation, both measured against `surface`:
+  //   low  4.96:1 (was 2.08 — failed every gate, and it is the state a
+  //        struggling user sees most: ring stroke, big numeral, trend icon)
+  //   mid  3.55:1 (graphics + large-text gate is 3:1; only ever used at 18pt+)
+  //   high 6.99:1
+  // Adjacent steps are >= 30 deltaE apart (mid/high used to be 9.4, i.e. a
+  // 5-day and a 7-day rendered as the same blue).
+  scoreLow: '#7889B0', // 0-3
   scoreMid: '#2F6BE0', // 4-5
-  scoreHigh: '#3D82FF', // 6-7
+  scoreHigh: '#66A6FF', // 6-7
   scoreFull: '#F0B429', // 8, perfect (gold)
 
   // scrims / overlays
@@ -92,22 +100,55 @@ export const fonts = {
   extrabold: 'Poppins_800ExtraBold',
 } as const;
 
-// Type scale (Poppins). Size-specific tracking: large text negative, body near zero.
+/**
+ * Type scale (Poppins). Size-specific tracking: large text negative, body near zero.
+ *
+ * Every text style in the app must come from here. The scale went unused for a
+ * whole batch because it was missing the sizes the screens actually needed
+ * (14, 16, 11, 10, 20, 32, 48), so components hand-rolled `fontFamily` +
+ * `fontSize` instead. Those steps now exist. If a new size is needed, add it
+ * here rather than inlining it.
+ *
+ * Never pair `fontWeight` with these — Poppins is a static family, so iOS
+ * ignores the weight and Android may synthesise a fake bold over a real one.
+ * Pick the right `fonts.*` face instead.
+ */
 export const type = {
+  // Stat numerals. Tabular so counters don't jitter as digits change.
+  hero: { fontFamily: fonts.extrabold, fontSize: 48, lineHeight: 54, letterSpacing: -1.6, fontVariant: ['tabular-nums'] },
+  statLg: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 38, letterSpacing: -0.8, fontVariant: ['tabular-nums'] },
+  stat: { fontFamily: fonts.bold, fontSize: 20, lineHeight: 26, letterSpacing: -0.2, fontVariant: ['tabular-nums'] },
+
+  // Headings.
   display: { fontFamily: fonts.extrabold, fontSize: 34, lineHeight: 40, letterSpacing: -0.8 },
   h1: { fontFamily: fonts.extrabold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6 },
   h2: { fontFamily: fonts.semibold, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
   h3: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, letterSpacing: -0.1 },
+  h4: { fontFamily: fonts.semibold, fontSize: 16, lineHeight: 22, letterSpacing: -0.1 },
+
+  // Body.
   bodyLg: { fontFamily: fonts.medium, fontSize: 17, lineHeight: 25, letterSpacing: 0 },
   body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, letterSpacing: 0 },
   bodyStrong: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, letterSpacing: 0 },
+  bodySm: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, letterSpacing: 0 },
+  bodySmStrong: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 20, letterSpacing: 0 },
+
+  // Support.
   caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, letterSpacing: 0.1 },
   label: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 16, letterSpacing: 0.4 },
+  labelSm: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 15, letterSpacing: 0.4 },
+  /** Floor. Nothing in the app may be smaller than this. */
+  micro: { fontFamily: fonts.semibold, fontSize: 10, lineHeight: 14, letterSpacing: 0.5 },
 } satisfies Record<string, TextStyle>;
 
 // Apply to HUD/score numerals so counters don't jitter as digits change.
 export const tabularNums: TextStyle = { fontVariant: ['tabular-nums'] };
 
+/**
+ * 4pt scale. There is deliberately no `20` step: the screens that used a raw
+ * 20 were mixing a 20pt gutter against the board's 16pt one, which left a 4pt
+ * misalignment down the Daily screen. Gutters and card padding are both `lg`.
+ */
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -152,7 +193,7 @@ export const elevation = {
     default: {},
   }) as ViewStyle,
   accentGlow: Platform.select({
-    ios: { shadowColor: '#0062FF', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
+    ios: { shadowColor: colors.accent, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 16 },
     android: { elevation: 10 },
     default: {},
   }) as ViewStyle,

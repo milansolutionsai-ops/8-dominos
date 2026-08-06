@@ -1,0 +1,51 @@
+<meta charset="utf-8">
+<body style="background:#060D1C;color:#fff;font-family:sans-serif;padding:20px">Seeding…
+<script>
+// Local-only demo data for design-pass screenshots. Never shipped.
+const PILLARS = [
+  ['body','Body',        'Morning run - 5km'],
+  ['health','Health',    'No sugar, 3L water'],
+  ['happiness','Happiness','30 min guitar'],
+  ['love','Love',        'Call Mum, no phone at dinner'],
+  ['work','Work',        'Deep work block 9-11'],
+  ['wealth','Wealth',    'Review portfolio + invoice'],
+  ['spirituality','Spirituality','20 min meditation'],
+  ['soul','Soul',        'Journal + read 10 pages'],
+];
+const DOW = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+function weekKey(d){const s=new Date(d);s.setDate(d.getDate()-d.getDay()+1);s.setHours(0,0,0,0);
+  return s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');}
+
+const today = new Date();
+const wk = weekKey(today);
+const todayIdx = (today.getDay()+6)%7;   // Monday-indexed position of today
+
+// Per-day completion counts for the week so far: two perfect days, today at 7/8.
+const plan = [8,8,5,7,6,3,0];
+
+const dominos = PILLARS.map(([id,title,act],pi)=>{
+  const activities={}; DOW.forEach(d=>activities[d]=act);
+  const status={}; status[wk]={};
+  for(let i=0;i<=todayIdx;i++){
+    status[wk][DOW[(i+1)%7]] = pi < plan[i];
+  }
+  return {id:String(pi+1), title, activities, completionStatus: status};
+});
+
+localStorage.setItem('@dominos_data', JSON.stringify(dominos));
+localStorage.setItem('@onboarding_completed','true');
+
+const iso = d => d.toISOString().split('T')[0];
+const mon = new Date(today); mon.setDate(today.getDate()-todayIdx);
+const moods=[4,5,3,4,4,2,3];
+for(let i=0;i<=todayIdx;i++){
+  const d=new Date(mon); d.setDate(mon.getDate()+i);
+  localStorage.setItem(`mood_${iso(d)}_morning`, String(moods[i]));
+  localStorage.setItem(`mood_${iso(d)}_evening`, String(Math.min(5,moods[i]+1)));
+}
+localStorage.setItem(`journal_${iso(today)}`,
+  "Grateful for the quiet hour before everyone woke up. Got the deep work block in before a single notification landed, and it set the tone for the whole day.");
+
+document.body.textContent='Seeded. Redirecting…';
+setTimeout(()=>location.replace('/'),400);
+</script>

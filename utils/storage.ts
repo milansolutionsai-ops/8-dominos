@@ -82,21 +82,22 @@ export class StorageService {
   }
 
   static getDefaultDominos(): Domino[] {
-    const emptyActivities = DAYS_OF_WEEK.reduce((acc, day) => {
-      acc[day] = '';
-      return acc;
-    }, {} as Record<string, string>);
+    // Built fresh per pillar. Sharing one object across all eight made every
+    // domino alias the same activities record, so editing one edited all of them.
+    const emptyActivities = () =>
+      DAYS_OF_WEEK.reduce((acc, day) => {
+        acc[day] = '';
+        return acc;
+      }, {} as Record<string, string>);
 
-    return [
-      { id: '1', title: 'Body', activities: emptyActivities, completionStatus: {} },
-      { id: '2', title: 'Health', activities: emptyActivities, completionStatus: {} },
-      { id: '3', title: 'Happiness', activities: emptyActivities, completionStatus: {} },
-      { id: '4', title: 'Love', activities: emptyActivities, completionStatus: {} },
-      { id: '5', title: 'Work', activities: emptyActivities, completionStatus: {} },
-      { id: '6', title: 'Wealth', activities: emptyActivities, completionStatus: {} },
-      { id: '7', title: 'Spirituality', activities: emptyActivities, completionStatus: {} },
-      { id: '8', title: 'Soul', activities: emptyActivities, completionStatus: {} },
-    ];
+    const PILLARS = ['Body', 'Health', 'Happiness', 'Love', 'Work', 'Wealth', 'Spirituality', 'Soul'];
+
+    return PILLARS.map((title, i) => ({
+      id: String(i + 1),
+      title,
+      activities: emptyActivities(),
+      completionStatus: {},
+    })) as Domino[];
   }
   static async isSetupCompleted(): Promise<boolean> {
     return this.isOnboardingCompleted();
@@ -199,6 +200,24 @@ export class StorageService {
     } catch (error) {
       console.error(`Error getting setting ${key}:`, error);
       return defaultValue;
+    }
+  }
+
+  /** String-valued sibling of saveSetting. Used for the share-nudge markers. */
+  static async saveValue(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(`setting_${key}`, value);
+    } catch (error) {
+      console.error(`Error saving value ${key}:`, error);
+    }
+  }
+
+  static async getValue(key: string): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(`setting_${key}`);
+    } catch (error) {
+      console.error(`Error getting value ${key}:`, error);
+      return null;
     }
   }
 }
