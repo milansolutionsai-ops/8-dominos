@@ -13,6 +13,7 @@ export interface BoardItem {
 interface DominoBoardProps {
   items: BoardItem[];
   onToggle: (id: string) => void;
+  onSetup?: (id: string) => void;
   justCompletedIndex: number | null;
 }
 
@@ -21,27 +22,33 @@ interface DominoBoardProps {
  * rail segments that light as momentum builds. On a Perfect Day the whole chain
  * topples in sequence.
  */
-export function DominoBoard({ items, onToggle, justCompletedIndex }: DominoBoardProps) {
+export function DominoBoard({ items, onToggle, onSetup, justCompletedIndex }: DominoBoardProps) {
   const [waveSignals, setWaveSignals] = useState<number[]>(() => items.map(() => 0));
   const prevPerfect = useRef(false);
 
   const allComplete = items.length > 0 && items.every((i) => i.completed);
 
   useEffect(() => {
-    if (allComplete && !prevPerfect.current) {
-      // Perfect Day: topple the chain tile-by-tile.
-      items.forEach((_, i) => {
-        setTimeout(() => {
-          setWaveSignals((prev) => {
-            const next = [...prev];
-            next[i] = (next[i] || 0) + 1;
-            return next;
-          });
-        }, i * 70);
-      });
+    if (!allComplete || prevPerfect.current) {
+      prevPerfect.current = allComplete;
+      return;
     }
-    prevPerfect.current = allComplete;
-  }, [allComplete]);
+    prevPerfect.current = true;
+
+    // Perfect Day: topple the chain tile-by-tile. Timers are tracked so an
+    // unmount (or undoing perfection mid-wave) cancels the rest.
+    const timers = items.map((_, i) =>
+      setTimeout(() => {
+        setWaveSignals((prev) => {
+          const next = [...prev];
+          next[i] = (next[i] || 0) + 1;
+          return next;
+        });
+      }, i * 70)
+    );
+
+    return () => timers.forEach(clearTimeout);
+  }, [allComplete, items.length]);
 
   return (
     <View style={styles.board}>
@@ -56,7 +63,9 @@ export function DominoBoard({ items, onToggle, justCompletedIndex }: DominoBoard
                 activity={item.activity}
                 completed={item.completed}
                 onToggle={() => onToggle(item.id)}
+                onSetup={onSetup ? () => onSetup(item.id) : undefined}
                 index={index}
+                leanLeft={leanLeft}
                 bumped={justCompletedIndex === index - 1}
                 toppleSignal={waveSignals[index]}
               />
@@ -79,6 +88,8 @@ export function DominoBoard({ items, onToggle, justCompletedIndex }: DominoBoard
 }
 
 const LEAN = 40;
+/** Tiles carry marginVertical: 5, so the gap between two is 10. */
+const TILE_GAP = 10;
 
 const styles = StyleSheet.create({
   board: {
@@ -94,11 +105,17 @@ const styles = StyleSheet.create({
   },
   connectorWrap: {
     alignItems: 'center',
-    marginVertical: -2,
+    // Pull up over the tiles' own margins so the link actually touches both
+    // ends. It used to span 16 across a 22pt gap, leaving a chain with
+    // detached links.
+    marginTop: -TILE_GAP,
+    marginBottom: -TILE_GAP,
+    height: TILE_GAP * 2,
+    justifyContent: 'center',
   },
   connector: {
     width: 4,
-    height: 16,
+    height: TILE_GAP * 2,
     borderRadius: 2,
   },
 });

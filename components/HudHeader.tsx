@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedProps,
+  withSpring,
+  useReducedMotion,
+} from 'react-native-reanimated';
+import { motion } from '@/constants/theme';
 import { ChevronLeft, ChevronRight, Flame, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
 import { dailyMessage } from '@/utils/motivation';
@@ -26,11 +33,24 @@ interface HudHeaderProps {
   streak: number;
 }
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak }: HudHeaderProps) {
+  const reduceMotion = useReducedMotion();
   const pct = totalDaily > 0 ? (dailyScore / totalDaily) * 100 : 0;
   const color = scoreColor(pct);
-  const offset = CIRC - (pct / 100) * CIRC;
   const isToday = currentDate.toDateString() === new Date().toDateString();
+
+  // The ring is the payoff for every tap on the board, and it used to snap.
+  // motion.springDefault was documented as "ring settle" and had no consumer.
+  const progress = useSharedValue(pct);
+  useEffect(() => {
+    progress.value = reduceMotion ? pct : withSpring(pct, motion.springDefault);
+  }, [pct, reduceMotion]);
+
+  const ringProps = useAnimatedProps(() => ({
+    strokeDashoffset: CIRC - (progress.value / 100) * CIRC,
+  }));
 
   return (
     <View style={styles.band}>
@@ -69,7 +89,7 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
         <View style={styles.ringWrap}>
           <Svg width={RING} height={RING}>
             <Circle cx={RING / 2} cy={RING / 2} r={R} stroke={colors.surfaceMuted} strokeWidth={STROKE} fill="none" />
-            <Circle
+            <AnimatedCircle
               cx={RING / 2}
               cy={RING / 2}
               r={R}
@@ -77,7 +97,7 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
               strokeWidth={STROKE}
               fill="none"
               strokeDasharray={CIRC}
-              strokeDashoffset={offset}
+              animatedProps={ringProps}
               strokeLinecap="round"
               rotation={-90}
               origin={`${RING / 2},${RING / 2}`}

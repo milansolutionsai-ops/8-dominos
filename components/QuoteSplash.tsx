@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, Animated, Dimensions, Pressable } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { getRandomQuote, Quote } from '../utils/quotes';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { DominoPips } from './DominoPips';
@@ -10,36 +11,53 @@ interface QuoteSplashProps {
 
 const { width, height } = Dimensions.get('window');
 
+/** Tightened from ~3.9s. This is a daily-use app; the splash is a greeting, not a feature. */
+const HOLD_MS = 1500;
+const FADE_IN_MS = 320;
+const FADE_OUT_MS = 260;
+
 export default function QuoteSplash({ onComplete }: QuoteSplashProps) {
+    const reduceMotion = useReducedMotion();
     const [quote, setQuote] = useState<Quote | null>(null);
     const opacityAnim = useRef(new Animated.Value(0)).current;
+    const done = useRef(false);
+
+    const finish = useCallback(() => {
+        if (done.current) return;
+        done.current = true;
+        if (reduceMotion) {
+            onComplete();
+            return;
+        }
+        Animated.timing(opacityAnim, {
+            toValue: 0,
+            duration: FADE_OUT_MS,
+            useNativeDriver: true,
+        }).start(onComplete);
+    }, [onComplete, reduceMotion]);
 
     useEffect(() => {
         setQuote(getRandomQuote());
 
-        Animated.timing(opacityAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-        }).start();
-
-        const timeout = setTimeout(() => {
+        if (reduceMotion) {
+            opacityAnim.setValue(1);
+        } else {
             Animated.timing(opacityAnim, {
-                toValue: 0,
-                duration: 500,
+                toValue: 1,
+                duration: FADE_IN_MS,
                 useNativeDriver: true,
-            }).start(() => {
-                onComplete();
-            });
-        }, 2600);
+            }).start();
+        }
 
+        const timeout = setTimeout(finish, HOLD_MS);
         return () => clearTimeout(timeout);
-    }, []);
+    }, [finish, reduceMotion]);
 
     if (!quote) return null;
 
     return (
-        <View style={styles.container}>
+        // Tappable: nobody should be held on a splash they've already read.
+        <Pressable style={styles.container} onPress={finish} accessibilityLabel="Skip">
             <Animated.View style={[styles.content, { opacity: opacityAnim }]}>
                 <Text style={styles.headerText}>8 DOMINOS</Text>
 
@@ -62,7 +80,7 @@ export default function QuoteSplash({ onComplete }: QuoteSplashProps) {
                     <Text style={styles.authorText}>— {quote.author}</Text>
                 </View>
             </Animated.View>
-        </View>
+        </Pressable>
     );
 }
 

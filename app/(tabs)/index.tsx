@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { Share2 } from 'lucide-react-native';
 import { DominoBoard } from '@/components/DominoBoard';
 import { HudHeader } from '@/components/HudHeader';
@@ -193,6 +194,7 @@ export default function DailyScreen() {
             completed: getDominoCompletion(domino),
           }))}
           onToggle={handleToggleCompletion}
+          onSetup={() => router.push('/(tabs)/settings?focus=activities')}
           justCompletedIndex={justCompletedIndex}
         />
 

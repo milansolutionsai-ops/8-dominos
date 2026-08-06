@@ -77,8 +77,14 @@ export const card = {
 
   /** Sized off the worst case: SPIRITUALITY at 10pt semibold + tracking ~72pt. */
   pillarCol: 74,
-  pipW: 22,
-  pipSize: 15,
+  /**
+   * The pip tile. Roughly 1:2 like a real domino, and sized so the face fits
+   * inside it: DominoPips renders `size * 2 + 1` tall, so pipSize must stay
+   * under (pipH - 1) / 2 or the top and bottom rows of pips get clipped.
+   */
+  pipW: 17,
+  pipH: 32,
+  pipSize: 14,
   colGap: 10,
 
   /** Week card: 7 day dots at 6pt with 4pt gaps. */

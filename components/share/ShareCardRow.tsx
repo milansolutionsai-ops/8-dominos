@@ -45,10 +45,11 @@ const styles = StyleSheet.create({
   },
   pip: {
     width: u(card.pipW),
-    height: u(card.rowH - 6),
-    borderRadius: u(4),
+    height: u(card.pipH),
+    borderRadius: u(3),
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     marginRight: u(card.colGap),
   },
   pipOn: {

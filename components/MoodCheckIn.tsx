@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { Check } from 'lucide-react-native';
 import { soundEffects } from '@/utils/soundEffects';
 import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
@@ -10,15 +12,22 @@ interface MoodCheckInProps {
     savedMood: number | null;
 }
 
+/**
+ * One axis, five steps. The fifth used to be a flame, which is intensity, not
+ * valence — so the scale changed meaning at the top and the trend chart then
+ * plotted it as if it hadn't. Labels are for screen readers; the faces carry it
+ * visually.
+ */
 const MOODS = [
-    { value: 1, emoji: '😞' },
-    { value: 2, emoji: '😐' },
-    { value: 3, emoji: '😊' },
-    { value: 4, emoji: '😁' },
-    { value: 5, emoji: '🔥' },
+    { value: 1, emoji: '😞', label: 'Rough' },
+    { value: 2, emoji: '😐', label: 'Flat' },
+    { value: 3, emoji: '🙂', label: 'Good' },
+    { value: 4, emoji: '😄', label: 'Great' },
+    { value: 5, emoji: '🤩', label: 'Excellent' },
 ];
 
 export default function MoodCheckIn({ period, onSave, savedMood }: MoodCheckInProps) {
+    const reduceMotion = useReducedMotion();
     const [selectedMood, setSelectedMood] = useState<number | null>(savedMood);
     const [scaleAnims] = useState(() => MOODS.map(() => new Animated.Value(1)));
 
@@ -30,7 +39,9 @@ export default function MoodCheckIn({ period, onSave, savedMood }: MoodCheckInPr
         setSelectedMood(mood);
         onSave(mood);
         soundEffects.playMood();
+        if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
 
+        if (reduceMotion) return;
         Animated.sequence([
             Animated.timing(scaleAnims[index], {
                 toValue: 1.2,
@@ -72,6 +83,9 @@ export default function MoodCheckIn({ period, onSave, savedMood }: MoodCheckInPr
                             key={mood.value}
                             onPress={() => handleSelect(mood.value, index)}
                             activeOpacity={0.7}
+                            accessibilityRole="radio"
+                            accessibilityLabel={mood.label}
+                            accessibilityState={{ selected: isSelected }}
                             style={[
                                 styles.emojiButton,
                                 isSelected && styles.emojiButtonSelected,
@@ -141,9 +155,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: spacing.sm,
+        // Was space-between with no floor, which left ~3pt between adjacent
+        // 44pt targets on a 320pt screen. A gap guarantees separation.
+        gap: spacing.sm,
     },
     emojiButton: {
+        flex: 1,
         width: 44,
         height: 44,
         justifyContent: 'center',
