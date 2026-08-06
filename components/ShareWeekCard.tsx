@@ -1,172 +1,135 @@
 import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
-import { DominoPips } from './DominoPips';
+import { Flame } from 'lucide-react-native';
+import { colors, fonts } from '@/constants/theme';
+import { u, card } from '@/constants/shareCard';
+import { ShareCardFrame } from './share/ShareCardFrame';
+import { ShareCardRow } from './share/ShareCardRow';
+
+export interface ShareWeekPillar {
+  title: string;
+  /** Days completed this week, 0..daysCounted. */
+  count: number;
+}
 
 export interface ShareWeekData {
   dateRange: string;
   percentage: number;
-  weekScore: number;
-  totalPossible: number;
+  /** Days the score is judged against. Less than 7 while the week is running. */
+  daysCounted: number;
+  partial: boolean;
   perfectDays: number;
-  bestDomino: string;
+  streak: number;
+  pillars: ShareWeekPillar[];
+}
+
+function pctColor(pct: number): string {
+  if (pct >= 100) return colors.scoreFull;
+  if (pct >= 75) return colors.scoreHigh;
+  if (pct >= 50) return colors.scoreMid;
+  return colors.scoreLow;
 }
 
 /**
- * Branded, share-ready summary of the user's week. Rendered on the Weekly
- * screen and captured to an image (react-native-view-shot) for the native
- * share sheet — doubles as marketing when a client shares it.
+ * Share-ready summary of the week, exported at 1080x1920.
+ *
+ * Every pillar row shows its real day count. The previous version rendered
+ * eight permanently-lit tiles regardless of performance, so the largest graphic
+ * on the artifact carried no information and openly contradicted the percentage
+ * printed above it. A brand that sells accountability cannot ship that.
+ *
+ * "Top pillar" is gone: it broke ties on array order, so it read "Body" for
+ * most of the week. The streak took its place, which is the number this app
+ * actually owns and was somehow only on the day card.
  */
 export const ShareWeekCard = forwardRef<View, { data: ShareWeekData }>(({ data }, ref) => {
+  const days = Math.max(1, data.daysCounted);
+
   return (
-    <View ref={ref} collapsable={false} style={styles.card}>
-      <Text style={styles.kicker}>8 DOMINOS</Text>
-      <Text style={styles.heading}>My Week</Text>
-      <Text style={styles.range}>{data.dateRange}</Text>
-
-      <View style={styles.percentBlock}>
-        <Text style={styles.percent}>{data.percentage}%</Text>
-        <Text style={styles.percentLabel}>dominos completed</Text>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>{data.weekScore}/{data.totalPossible}</Text>
-          <Text style={styles.statLabel}>Habits</Text>
+    <ShareCardFrame
+      ref={ref}
+      meta={data.dateRange}
+      heroValue={`${data.percentage}%`}
+      heroColor={pctColor(data.percentage)}
+      heroLabel={data.partial ? 'of my week so far' : 'of my week'}
+      heroLabelColor={data.percentage >= 100 ? colors.scoreFull : undefined}
+      footerLeft={
+        <View style={styles.footerLeft}>
+          <Flame
+            size={u(13)}
+            color={data.streak > 0 ? colors.warning : colors.textMuted}
+            strokeWidth={2.5}
+          />
+          <Text style={styles.footerText}>
+            {data.streak} day streak
+            {data.perfectDays > 0
+              ? `  ·  ${data.perfectDays} perfect ${data.perfectDays === 1 ? 'day' : 'days'}`
+              : ''}
+          </Text>
         </View>
-        <View style={styles.divider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue}>{data.perfectDays}</Text>
-          <Text style={styles.statLabel}>Perfect days</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.stat}>
-          <Text style={styles.statValue} numberOfLines={1}>{data.bestDomino || '—'}</Text>
-          <Text style={styles.statLabel}>Top pillar</Text>
-        </View>
-      </View>
-
-      <View style={styles.chain}>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-          <View key={n} style={styles.chainTile}>
-            <DominoPips count={n} color={colors.onAccent} size={13} />
+      }
+    >
+      {data.pillars.map((pillar, i) => (
+        <ShareCardRow
+          key={pillar.title}
+          pipCount={i + 1}
+          title={pillar.title}
+          active={pillar.count > 0}
+        >
+          <View style={styles.dots}>
+            {Array.from({ length: days }, (_, d) => (
+              <View
+                key={d}
+                style={[styles.dot, d < pillar.count ? styles.dotOn : styles.dotOff]}
+              />
+            ))}
           </View>
-        ))}
-      </View>
-
-      <Text style={styles.footer}>Body · Health · Happiness · Love · Work · Wealth · Spirituality · Soul</Text>
-      <Text style={styles.url}>8dominos.com</Text>
-    </View>
+          <Text style={styles.count}>
+            {pillar.count}/{days}
+          </Text>
+        </ShareCardRow>
+      ))}
+    </ShareCardFrame>
   );
 });
 
 ShareWeekCard.displayName = 'ShareWeekCard';
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    padding: spacing.xl,
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.md,
-  },
-  kicker: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    letterSpacing: 3,
-    color: colors.accent,
-    textTransform: 'uppercase',
-  },
-  heading: {
-    fontFamily: fonts.extrabold,
-    fontSize: 30,
-    color: colors.textPrimary,
-    marginTop: spacing.sm,
-    letterSpacing: -0.8,
-  },
-  range: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  percentBlock: {
-    alignItems: 'center',
-    marginVertical: spacing.xl,
-  },
-  percent: {
-    fontFamily: fonts.extrabold,
-    fontSize: 60,
-    color: colors.accent,
-    letterSpacing: -2,
-    fontVariant: ['tabular-nums'],
-  },
-  percentLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: -4,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  stat: {
+  dots: {
     flex: 1,
-    alignItems: 'center',
-  },
-  divider: {
-    width: 1,
-    height: 32,
-    backgroundColor: colors.border,
-  },
-  statValue: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: colors.textPrimary,
-    paddingHorizontal: 4,
-    fontVariant: ['tabular-nums'],
-  },
-  statLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  chain: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: spacing.xl,
-  },
-  chainTile: {
-    width: 26,
-    height: 38,
-    borderRadius: radius.sm,
-    backgroundColor: colors.accent,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: u(card.dotGap),
   },
-  footer: {
-    fontFamily: fonts.medium,
-    fontSize: 10,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.lg,
-    letterSpacing: 0.3,
+  dot: {
+    width: u(card.dotSize),
+    height: u(card.dotSize),
+    borderRadius: u(card.dotSize / 2),
   },
-  url: {
+  dotOn: { backgroundColor: colors.accentBright },
+  dotOff: { backgroundColor: colors.surfaceMuted, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.borderStrong },
+  count: {
+    width: u(30),
+    marginLeft: u(card.colGap),
+    textAlign: 'right',
     fontFamily: fonts.semibold,
-    fontSize: 12,
-    color: colors.accent,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-    letterSpacing: 0.3,
+    fontSize: u(11),
+    color: colors.textSecondary,
+    fontVariant: ['tabular-nums'],
+    includeFontPadding: false,
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: u(6),
+  },
+  footerText: {
+    fontFamily: fonts.semibold,
+    fontSize: u(11),
+    letterSpacing: u(0.2),
+    color: colors.textSecondary,
+    fontVariant: ['tabular-nums'],
   },
 });

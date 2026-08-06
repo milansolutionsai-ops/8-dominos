@@ -1,26 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { shareCard } from '@/utils/shareCard';
+import { Share2 } from 'lucide-react-native';
 import { DominoBoard } from '@/components/DominoBoard';
 import { HudHeader } from '@/components/HudHeader';
-import { ShareDayCard } from '@/components/ShareDayCard';
+import { ShareDayData } from '@/components/ShareDayCard';
+import { SharePreviewSheet, ShareCardPayload } from '@/components/share/SharePreviewSheet';
 import DailyJournal from '@/components/DailyJournal';
 import { PerfectDayCelebration } from '@/components/PerfectDayCelebration';
 import { useDominos } from '@/hooks/useDominos';
+import { useShareNudges } from '@/hooks/useShareNudges';
 import { DateUtils } from '@/utils/dateUtils';
 import { soundEffects } from '@/utils/soundEffects';
 import MoodCheckIn from '@/components/MoodCheckIn';
 import { StorageService } from '@/utils/storage';
 import { StatsService } from '@/utils/stats';
-import { colors, fonts, spacing } from '@/constants/theme';
+import { colors, type, spacing, radius } from '@/constants/theme';
+
+/**
+ * One overlay at a time. iOS silently drops a Modal presented while another is
+ * dismissing, so going celebration -> preview needs an explicit gap.
+ */
+type Overlay =
+  | { kind: 'none' }
+  | { kind: 'celebration' }
+  | { kind: 'preview'; payload: ShareCardPayload };
+
+const MODAL_HANDOFF_MS = 350;
 
 export default function DailyScreen() {
   const insets = useSafeAreaInsets();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' });
   const { dominos, loading, toggleCompletion, refreshDominos } = useDominos();
+  const { ready: nudgesReady, dayAlreadyResolved, resolveDay } = useShareNudges();
   const previousScoreRef = useRef<number>(0);
   const [morningMood, setMorningMood] = useState<number | null>(null);
   const [eveningMood, setEveningMood] = useState<number | null>(null);
@@ -91,32 +105,56 @@ export default function DailyScreen() {
     }, 0);
   };
 
-  useEffect(() => {
-    const dailyScore = calculateDailyScore();
+  const isToday = currentDate.toDateString() === new Date().toDateString();
 
-    if (dailyScore === 8 && previousScoreRef.current < 8) {
+  useEffect(() => {
+    if (!nudgesReady) return;
+    const dailyScore = calculateDailyScore();
+    const target = dominos.length || 8;
+
+    // Only celebrate today, only once per calendar day. Without the persisted
+    // guard a cold start on an already-perfect day re-fired the whole thing,
+    // because previousScoreRef starts at 0.
+    if (
+      dailyScore === target &&
+      previousScoreRef.current < target &&
+      isToday &&
+      !dayAlreadyResolved()
+    ) {
       // Haptics for this moment are owned by PerfectDayCelebration (Success +
       // a delayed Heavy) so the beats stay in sync with the animation.
-      setShowConfetti(true);
+      setOverlay({ kind: 'celebration' });
       soundEffects.playPerfect();
-
-      // Update the ref BEFORE the early return, otherwise it keeps its pre-8
-      // value and the celebration re-fires on the next re-render at 8/8.
-      previousScoreRef.current = dailyScore;
-
-      const timer = setTimeout(() => {
-        setShowConfetti(false);
-      }, 3400);
-
-      return () => clearTimeout(timer);
     }
 
     previousScoreRef.current = dailyScore;
-  }, [dominos]);
+  }, [dominos, nudgesReady, isToday, dayAlreadyResolved]);
 
-  const shareDayRef = useRef<View>(null);
+  const buildDayPayload = useCallback((): ShareCardPayload => {
+    const data: ShareDayData = {
+      dateLabel: DateUtils.formatDate(currentDate),
+      score: calculateDailyScore(),
+      total: dominos.length || 8,
+      streak: StatsService.calculateStats(dominos).currentStreak,
+      pillars: dominos.map((domino) => ({
+        title: domino.title,
+        activity: getCurrentDayActivity(domino),
+        completed: getDominoCompletion(domino),
+      })),
+    };
+    return { kind: 'day', data };
+  }, [currentDate, dominos]);
 
-  const handleShareDay = () => shareCard(shareDayRef, '8dominos-my-day.png');
+  const shareFromCelebration = () => {
+    resolveDay();
+    setOverlay({ kind: 'none' });
+    setTimeout(() => setOverlay({ kind: 'preview', payload: buildDayPayload() }), MODAL_HANDOFF_MS);
+  };
+
+  const dismissCelebration = () => {
+    resolveDay();
+    setOverlay({ kind: 'none' });
+  };
 
   if (loading) {
     return (
@@ -142,9 +180,8 @@ export default function DailyScreen() {
           currentDate={currentDate}
           onDateChange={setCurrentDate}
           dailyScore={dailyScore}
-          totalDaily={8}
+          totalDaily={dominos.length || 8}
           streak={streak}
-          onShare={handleShareDay}
         />
 
         {/* Game board leads: the 8 dominoes as a chain */}
@@ -158,6 +195,21 @@ export default function DailyScreen() {
           onToggle={handleToggleCompletion}
           justCompletedIndex={justCompletedIndex}
         />
+
+        {/* Replaces the unlabelled 38x38 icon that used to sit in the HUD
+            firing an irreversible action. Quiet, labelled, and only offered
+            once there is something worth showing. */}
+        {dailyScore > 0 && currentDate <= new Date() && (
+          <Pressable
+            style={({ pressed }) => [styles.ghostShare, pressed && styles.pressed]}
+            onPress={() => setOverlay({ kind: 'preview', payload: buildDayPayload() })}
+            accessibilityRole="button"
+            accessibilityLabel="Share this day"
+          >
+            <Share2 size={16} color={colors.textMuted} strokeWidth={2.5} />
+            <Text style={styles.ghostShareText}>Share this day</Text>
+          </Pressable>
+        )}
 
         {/* Secondary: reflection + mood, below the board */}
         <Text style={styles.sectionLabel}>REFLECTION</Text>
@@ -178,27 +230,16 @@ export default function DailyScreen() {
       </ScrollView>
 
       <PerfectDayCelebration
-        trigger={showConfetti}
+        visible={overlay.kind === 'celebration'}
         streak={streak}
-        onComplete={() => setShowConfetti(false)}
+        onShare={shareFromCelebration}
+        onDismiss={dismissCelebration}
       />
 
-      {/* Off-screen capture target for "Share my day" — laid out but never seen. */}
-      <View style={styles.captureHost} pointerEvents="none">
-        <ShareDayCard
-          ref={shareDayRef}
-          data={{
-            dateLabel: DateUtils.formatDate(currentDate),
-            score: dailyScore,
-            total: 8,
-            streak,
-            pillars: dominos.map((domino) => ({
-              title: domino.title,
-              completed: getDominoCompletion(domino),
-            })),
-          }}
-        />
-      </View>
+      <SharePreviewSheet
+        payload={overlay.kind === 'preview' ? overlay.payload : null}
+        onClose={() => setOverlay({ kind: 'none' })}
+      />
     </View>
   );
 }
@@ -207,20 +248,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
-    // Clips the off-screen capture host below; without this it extends the
-    // page bounds on web and the layout scrolls/crops oddly.
+    // The share sheet's capture host is positioned at left:-10000; without this
+    // it extends the page bounds on web and the layout crops oddly.
     overflow: 'hidden',
-  },
-  captureHost: {
-    position: 'absolute',
-    left: -10000,
-    top: 0,
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  ghostShare: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ghostShareText: {
+    ...type.bodySmStrong,
+    color: colors.textSecondary,
+  },
+  pressed: { opacity: 0.85 },
   scrollView: {
     flex: 1,
   },
@@ -228,8 +282,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   sectionLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
+    ...type.label,
     letterSpacing: 1,
     color: colors.textMuted,
     marginTop: spacing.xl,

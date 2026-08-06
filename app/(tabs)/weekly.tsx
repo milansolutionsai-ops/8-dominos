@@ -1,680 +1,430 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { shareCard } from '@/utils/shareCard';
-import { TrendingUp, Minus, TrendingDown, Share2 } from 'lucide-react-native';
-import { ScoreDisplay } from '@/components/ScoreDisplay';
-import { ShareWeekCard, ShareWeekData } from '@/components/ShareWeekCard';
+import { Share2 } from 'lucide-react-native';
+import { ShareWeekData } from '@/components/ShareWeekCard';
+import { SharePreviewSheet, ShareCardPayload } from '@/components/share/SharePreviewSheet';
+import { ShareNudgeCard } from '@/components/share/ShareNudgeCard';
 import { DominoPips } from '@/components/DominoPips';
 import { useDominos } from '@/hooks/useDominos';
+import { useShareNudges } from '@/hooks/useShareNudges';
 import { DateUtils } from '@/utils/dateUtils';
-import { DAY_NAMES, Domino, DayOfWeek } from '@/types/domino';
+import { DAY_NAMES } from '@/types/domino';
 import MoodTrendChart from '@/components/MoodTrendChart';
 import { StorageService } from '@/utils/storage';
+import { StatsService } from '@/utils/stats';
 import { weeklyMessage } from '@/utils/motivation';
-import { colors, fonts, elevation } from '@/constants/theme';
+import { colors, fonts, type, spacing, radius, elevation } from '@/constants/theme';
 
-interface WeeklyOverviewProps {
-  dominos: Domino[];
-  weekData: Record<DayOfWeek, Record<string, boolean>>;
-  currentDate: Date;
-}
+const CHART_H = 132;
+const BAR_W = 22;
 
 export default function WeeklyScreen() {
   const insets = useSafeAreaInsets();
   const { dominos, loading, refreshDominos } = useDominos();
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    return startOfWeek;
-  });
   const [weekMoods, setWeekMoods] = useState<any[]>([]);
+  const [preview, setPreview] = useState<ShareCardPayload | null>(null);
+  const { weekNudgeVisible, resolveWeekNudge } = useShareNudges();
 
-  React.useEffect(() => {
-    loadWeekMoods();
-  }, [currentWeekStart]);
+  const weekStart = useMemo(() => DateUtils.startOfWeek(new Date()), []);
 
-  const loadWeekMoods = async () => {
-    const moods = await StorageService.getWeekMoods(currentWeekStart.toISOString().split('T')[0]);
-    const formattedMoods = moods.map((m, index) => ({
-      ...m,
-      dayLabel: DAY_NAMES[index],
-    }));
-    setWeekMoods(formattedMoods);
-  };
+  const loadWeekMoods = useCallback(async () => {
+    const iso = weekStart.toISOString().split('T')[0];
+    const moods = await StorageService.getWeekMoods(iso);
+    // Label by the record's own date, not its array position: a gap used to
+    // shift every subsequent label.
+    setWeekMoods(
+      moods.map((m, index) => ({ ...m, dayLabel: DAY_NAMES[index % 7] }))
+    );
+  }, [weekStart]);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       refreshDominos();
       loadWeekMoods();
-    }, [])
+    }, [loadWeekMoods])
   );
 
-  const calculateWeeklyScore = () => {
-    const weekKey = DateUtils.getWeekKeyForDate(new Date());
-    return dominos.reduce((score, domino) => {
-      const weekCompletion = domino.completionStatus[weekKey];
-      if (!weekCompletion) return score;
-
-      return score + Object.values(weekCompletion).filter(Boolean).length;
-    }, 0);
-  };
-
-  const calculateDailyScore = (dayIndex: number) => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    const date = DateUtils.addDays(startOfWeek, dayIndex);
-    const weekKey = DateUtils.getWeekKeyForDate(date);
-    const dayOfWeek = DateUtils.getDayOfWeek(date);
-
-    return dominos.reduce((score, domino) => {
-      const completed = domino.completionStatus[weekKey]?.[dayOfWeek] || false;
-      return score + (completed ? 1 : 0);
-    }, 0);
-  };
-
-  const calculateTodayScore = () => {
-    const today = new Date();
-    const weekKey = DateUtils.getWeekKeyForDate(today);
-    const dayOfWeek = DateUtils.getDayOfWeek(today);
-
-    return dominos.reduce((score, domino) => {
-      const completed = domino.completionStatus[weekKey]?.[dayOfWeek] || false;
-      return score + (completed ? 1 : 0);
-    }, 0);
-  };
-
-  const calculateWeekStats = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-
-    let completedDays = 0;
-    let missedDays = 0;
-    let perfectDays = 0;
-
-    for (let i = 0; i < 7; i++) {
-      const date = DateUtils.addDays(startOfWeek, i);
-      const weekKey = DateUtils.getWeekKeyForDate(date);
-      const dayOfWeek = DateUtils.getDayOfWeek(date);
-
-      let dayCompletions = 0;
-      dominos.forEach(domino => {
-        if (domino.completionStatus[weekKey]?.[dayOfWeek]) {
-          dayCompletions++;
-        }
-      });
-
-      if (dayCompletions > 0) {
-        completedDays++;
-      } else {
-        missedDays++;
-      }
-
-      if (dayCompletions === dominos.length && dominos.length > 0) {
-        perfectDays++;
-      }
-    }
-
-    return { completedDays, missedDays, perfectDays };
-  };
-
-  const getWeekDateRange = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    const endOfWeek = DateUtils.addDays(startOfWeek, 6);
-
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const startMonth = monthNames[startOfWeek.getMonth()];
-    const endMonth = monthNames[endOfWeek.getMonth()];
-
-    return `${startMonth} ${startOfWeek.getDate()} - ${endMonth} ${endOfWeek.getDate()}, ${endOfWeek.getFullYear()}`;
-  };
-
-  const weeklyScore = calculateWeeklyScore();
-  const todayScore = calculateTodayScore();
-  const weekStats = calculateWeekStats();
-  const totalPossible = dominos.length * 7;
-  const weeklyPercentage = totalPossible > 0 ? Math.round((weeklyScore / totalPossible) * 100) : 0;
-
-  const shareRef = useRef<View>(null);
-
-  const getBestDomino = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    let best = '';
-    let bestCount = 0;
-    dominos.forEach(domino => {
-      let count = 0;
-      for (let i = 0; i < 7; i++) {
-        const date = DateUtils.addDays(startOfWeek, i);
-        const weekKey = DateUtils.getWeekKeyForDate(date);
-        const dayOfWeek = DateUtils.getDayOfWeek(date);
-        if (domino.completionStatus[weekKey]?.[dayOfWeek]) count++;
-      }
-      if (count > bestCount) {
-        bestCount = count;
-        best = domino.title;
-      }
-    });
-    return best;
-  };
+  const summary = useMemo(
+    () => StatsService.summarizeWeek(dominos, weekStart),
+    [dominos, weekStart]
+  );
+  const streak = useMemo(() => StatsService.calculateStats(dominos).currentStreak, [dominos]);
+  const target = dominos.length || 8;
+  const motivation = weeklyMessage(summary.percentage);
 
   const shareData: ShareWeekData = {
-    dateRange: getWeekDateRange(),
-    percentage: weeklyPercentage,
-    weekScore: weeklyScore,
-    totalPossible,
-    perfectDays: weekStats.perfectDays,
-    bestDomino: getBestDomino(),
+    dateRange: summary.dateRange,
+    percentage: summary.percentage,
+    daysCounted: summary.daysCounted,
+    partial: summary.partial,
+    perfectDays: summary.perfectDays,
+    streak,
+    pillars: summary.pillars,
   };
 
-  const handleShare = () => shareCard(shareRef, '8dominos-my-week.png');
+  const openShare = () => setPreview({ kind: 'week', data: shareData });
+
+  const barColor = (score: number) => {
+    const pct = (score / target) * 100;
+    if (pct >= 100) return colors.scoreFull;
+    if (pct >= 75) return colors.scoreHigh;
+    if (pct >= 50) return colors.scoreMid;
+    return colors.scoreLow;
+  };
 
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.loading}>
-          {/* Loading placeholder */}
+        <View style={styles.header}>
+          <View style={[styles.skeleton, { width: 200, height: 32 }]} />
+          <View style={[styles.skeleton, { width: 150, height: 28, marginTop: spacing.sm }]} />
         </View>
+        <View style={[styles.skeleton, styles.skeletonCard]} />
+        <View style={[styles.skeleton, styles.skeletonCard]} />
       </View>
     );
   }
-
-  const getTrendIcon = () => {
-    if (weeklyPercentage >= 75) {
-      return <TrendingUp size={32} color={colors.scoreFull} strokeWidth={3} />;
-    } else if (weeklyPercentage >= 50) {
-      return <Minus size={32} color={colors.scoreMid} strokeWidth={3} />;
-    } else {
-      return <TrendingDown size={32} color={colors.scoreLow} strokeWidth={3} />;
-    }
-  };
-
-  const getMotivationalContent = () => weeklyMessage(weeklyPercentage);
-
-  const getBarColor = (percentage: number) => {
-    if (percentage === 100) return colors.scoreFull;
-    if (percentage >= 75) return colors.scoreHigh;
-    if (percentage >= 50) return colors.scoreMid;
-    return colors.scoreLow;
-  };
-
-  const getDayBarHeight = (dayIndex: number) => {
-    const dayScore = calculateDailyScore(dayIndex);
-    const maxScore = dominos.length || 8;
-    const percentage = (dayScore / maxScore) * 100;
-    return Math.max((percentage / 100) * 120, 20);
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <Text style={styles.headerTitle}>Weekly Overview</Text>
-          </View>
+          <Text style={styles.headerTitle}>Weekly Overview</Text>
           <View style={styles.weekBadge}>
-            <Text style={styles.weekBadgeText}>{getWeekDateRange()}</Text>
+            <Text style={styles.weekBadgeText}>{summary.dateRange}</Text>
           </View>
         </View>
 
-        <ScoreDisplay
-          dailyScore={todayScore}
-          totalDaily={dominos.length}
-          weeklyScore={weeklyScore}
-          totalWeekly={dominos.length * 7}
-          showWeekly={true}
-        />
+        {/* The one hero stat for this screen. */}
+        <View style={styles.card}>
+          <Text style={[styles.hero, { color: barColor(summary.percentage / 100 * target) }]}>
+            {summary.percentage}%
+          </Text>
+          <Text style={styles.heroLabel}>
+            {summary.partial
+              ? `of your week so far (${summary.daysCounted} ${summary.daysCounted === 1 ? 'day' : 'days'} in)`
+              : 'of your week'}
+          </Text>
 
-        <View style={styles.performanceCard}>
-          <View style={styles.performanceHeader}>
-            {getTrendIcon()}
-            <Text style={styles.percentageText}>{weeklyPercentage}%</Text>
-          </View>
-
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Completed</Text>
-              <Text style={styles.statValue}>{weekStats.completedDays}</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{summary.completed}</Text>
+              <Text style={styles.statLabel}>Done</Text>
             </View>
             <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Missed</Text>
-              <Text style={styles.statValue}>{weekStats.missedDays}</Text>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{summary.activeDays}</Text>
+              <Text style={styles.statLabel}>Active days</Text>
             </View>
             <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Perfect Days</Text>
-              <Text style={styles.statValue}>{weekStats.perfectDays}</Text>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{summary.perfectDays}</Text>
+              <Text style={styles.statLabel}>Perfect days</Text>
             </View>
           </View>
         </View>
 
-        <ShareWeekCard ref={shareRef} data={shareData} />
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
-          <Share2 size={18} color={colors.onAccent} />
+        {weekNudgeVisible(summary.percentage) && (
+          <ShareNudgeCard
+            percentage={summary.percentage}
+            perfectDays={summary.perfectDays}
+            onShare={() => {
+              resolveWeekNudge();
+              openShare();
+            }}
+            onDismiss={resolveWeekNudge}
+          />
+        )}
+
+        <Pressable
+          style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
+          onPress={openShare}
+          accessibilityRole="button"
+          accessibilityLabel="Share my week"
+        >
+          <Share2 size={18} color={colors.onAccent} strokeWidth={2.5} />
           <Text style={styles.shareButtonText}>Share my week</Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <View style={styles.heatmapCardContainer}>
-          <View style={styles.heatmapCard}>
-            <Text style={styles.heatmapTitle}>Daily Breakdown</Text>
-            <View style={styles.heatmapContainer}>
-              {DAY_NAMES.map((dayName, index) => {
-                const dayScore = calculateDailyScore(index);
-                const maxScore = dominos.length || 8;
-                const percentage = (dayScore / maxScore) * 100;
-                const barHeight = getDayBarHeight(index);
+        {/* Daily breakdown. Bars are thin with a surface gap, not bordered
+            blocks, and days that have not happened render as empty slots
+            rather than zeros. */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Daily Breakdown</Text>
+          <View style={styles.chart}>
+            {summary.dailyScores.map((score, i) => {
+              const isToday = i === summary.daysCounted - 1 && summary.partial;
+              const future = score === null;
+              const h = future ? 0 : Math.max((score / target) * (CHART_H - 26), 3);
 
-                const today = new Date();
-                const startOfWeek = new Date(today);
-                startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-                const date = DateUtils.addDays(startOfWeek, index);
-                const isToday = date.toDateString() === new Date().toDateString();
-
-                return (
-                  <View key={index} style={styles.barWrapper}>
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          height: barHeight,
-                          backgroundColor: getBarColor(percentage),
-                          borderWidth: isToday ? 3 : 2,
-                        },
-                      ]}
-                    >
-                      <Text style={styles.barScore}>{dayScore}</Text>
-                    </View>
-                    <Text style={styles.barLabel}>{dayName}</Text>
+              return (
+                <View key={i} style={styles.barCol}>
+                  <View style={styles.barTrack}>
+                    {future ? (
+                      <View style={styles.barFuture} />
+                    ) : (
+                      <>
+                        <Text style={styles.barScore}>{score}</Text>
+                        <View style={[styles.bar, { height: h, backgroundColor: barColor(score!) }]} />
+                      </>
+                    )}
                   </View>
-                );
-              })}
-            </View>
+                  <Text style={[styles.barLabel, isToday && styles.barLabelToday]}>
+                    {DAY_NAMES[i]}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
         <MoodTrendChart data={weekMoods} />
-        <View style={styles.weekGrid}>
-          {DAY_NAMES.map((dayName, index) => {
-            const dayScore = calculateDailyScore(index);
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-            const date = DateUtils.addDays(startOfWeek, index);
-            const isToday = date.toDateString() === new Date().toDateString();
 
-            return (
-              <View
-                key={dayName}
-                style={[
-                  styles.dayCard,
-                  isToday && styles.todayCard,
-                ]}
-              >
-                <Text style={[styles.dayName, isToday && styles.todayText]}>
-                  {dayName}
-                </Text>
-                <Text style={styles.dayDate}>
-                  {date.getDate()}
-                </Text>
-                <View style={styles.dayScore}>
-                  <Text style={[styles.scoreText, isToday && styles.todayText]}>
-                    {dayScore}/8
-                  </Text>
-                </View>
-                <View style={styles.dotsGrid}>
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.miniDot,
-                        i < dayScore && styles.completedDot,
-                      ]}
-                    />
-                  ))}
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        <View style={styles.dominosList}>
-          <Text style={styles.dominosTitle}>Your Dominos</Text>
+        {/* Per-pillar: the only genuinely different cut of the same week. */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Your Dominos</Text>
+          <View style={styles.pillarHeaderRow}>
+            <View style={styles.pillarNameCol} />
+            {DAY_NAMES.map((d) => (
+              <Text key={d} style={styles.pillarDayHead}>{d[0]}</Text>
+            ))}
+          </View>
           {dominos.map((domino, index) => (
-            <View key={domino.id} style={styles.dominoRow}>
-              <View style={styles.dominoPipCap}>
-                <DominoPips count={index + 1} color={colors.accentBright} size={15} />
+            <View key={domino.id} style={styles.pillarRow}>
+              <View style={styles.pillarNameCol}>
+                <DominoPips count={index + 1} color={colors.accentBright} size={13} />
+                <Text style={styles.pillarName} numberOfLines={1}>{domino.title}</Text>
               </View>
-              <Text style={styles.dominoTitle}>{domino.title}</Text>
-              <View style={styles.dominoProgress}>
-                {DAY_NAMES.map((_, dayIndex) => {
-                  const date = DateUtils.addDays(currentWeekStart, dayIndex);
-                  const weekKey = DateUtils.getWeekKeyForDate(date);
-                  const dayOfWeek = DateUtils.getDayOfWeek(date);
-                  const completed = domino.completionStatus[weekKey]?.[dayOfWeek] || false;
-
-                  return (
-                    <View
-                      key={dayIndex}
-                      style={[
-                        styles.progressDot,
-                        completed && styles.progressDotCompleted,
-                      ]}
-                    />
-                  );
-                })}
-              </View>
+              {DAY_NAMES.map((_, dayIndex) => {
+                const date = DateUtils.addDays(weekStart, dayIndex);
+                const weekKey = DateUtils.getWeekKeyForDate(date);
+                const dayOfWeek = DateUtils.getDayOfWeek(date);
+                const done = domino.completionStatus[weekKey]?.[dayOfWeek] || false;
+                const future = dayIndex >= summary.daysCounted;
+                return (
+                  <View
+                    key={dayIndex}
+                    style={[styles.pillarDot, done && styles.pillarDotOn, future && styles.pillarDotFuture]}
+                  />
+                );
+              })}
             </View>
           ))}
         </View>
 
         <View style={styles.motivationCard}>
-          <Text style={styles.motivationTitle}>{getMotivationalContent().title}</Text>
-          <Text style={styles.motivationMessage}>{getMotivationalContent().message}</Text>
+          <Text style={styles.motivationTitle}>{motivation.title}</Text>
+          <Text style={styles.motivationMessage}>{motivation.message}</Text>
         </View>
-
-        <View style={styles.spacer} />
       </ScrollView>
+
+      <SharePreviewSheet payload={preview} onClose={() => setPreview(null)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
+  container: { flex: 1, backgroundColor: colors.bg },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: spacing.xxxl },
+
+  skeleton: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
   },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  skeletonCard: {
+    height: 180,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
   },
+
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  headerTop: {
-    marginBottom: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
   },
   headerTitle: {
-    fontFamily: fonts.extrabold,
-    fontSize: 28,
+    ...type.h1,
     color: colors.textPrimary,
-    letterSpacing: -0.6,
   },
   weekBadge: {
+    marginTop: spacing.sm,
     backgroundColor: colors.surfaceMuted,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.sm,
     alignSelf: 'flex-start',
   },
   weekBadgeText: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    color: colors.textMuted,
+    ...type.caption,
+    color: colors.textSecondary,
   },
-  performanceCard: {
+
+  card: {
     backgroundColor: colors.surface,
-    marginHorizontal: 16,
-    borderRadius: 20,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 20,
-    marginVertical: 12,
+    padding: spacing.lg,
     ...elevation.md,
   },
-  performanceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 24,
-  },
-  percentageText: {
-    fontFamily: fonts.bold,
-    fontSize: 48,
+  cardTitle: {
+    ...type.h3,
     color: colors.textPrimary,
-    fontVariant: ['tabular-nums'],
+    marginBottom: spacing.lg,
   },
-  statsContainer: {
+
+  hero: {
+    ...type.hero,
+    textAlign: 'center',
+  },
+  heroLabel: {
+    ...type.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.border,
+  stat: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 32, backgroundColor: colors.border },
+  statValue: {
+    ...type.stat,
+    color: colors.textPrimary,
   },
   statLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
+    ...type.label,
     color: colors.textMuted,
-    marginBottom: 8,
+    marginTop: spacing.xs,
   },
-  statValue: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  heatmapCardContainer: {
-    paddingHorizontal: 16,
-    marginVertical: 12,
-  },
-  heatmapCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 20,
-    ...elevation.md,
-  },
-  heatmapTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.textPrimary,
-    marginBottom: 20,
-  },
-  heatmapContainer: {
-    height: 150,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  barWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  bar: {
-    width: '80%',
-    minHeight: 20,
-    borderRadius: 8,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  barScore: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    color: colors.onAccent,
-  },
-  barLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  weekGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  dayCard: {
-    width: '13%',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  todayCard: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-    borderWidth: 1,
-  },
-  dayName: {
-    fontFamily: fonts.semibold,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  todayText: {
-    color: colors.onAccent,
-  },
-  dayDate: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  dayScore: {
-    marginBottom: 4,
-  },
-  scoreText: {
-    fontFamily: fonts.semibold,
-    fontSize: 10,
-    color: colors.textMuted,
-  },
-  dotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  miniDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.surfaceMuted,
-    margin: 1,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-  },
-  completedDot: {
-    backgroundColor: colors.accent,
-  },
-  dominosList: {
-    paddingHorizontal: 16,
-    marginVertical: 12,
-  },
-  dominosTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: colors.textPrimary,
-    marginBottom: 12,
-  },
-  dominoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...elevation.md,
-  },
-  dominoPipCap: {
-    width: 34,
-    height: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  dominoTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  dominoProgress: {
-    flexDirection: 'row',
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surfaceMuted,
-    marginLeft: 4,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-  },
-  progressDotCompleted: {
-    backgroundColor: colors.accent,
-  },
-  motivationCard: {
-    backgroundColor: colors.surface,
-    marginHorizontal: 16,
-    marginVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    padding: 20,
-    ...elevation.md,
-  },
-  motivationTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  motivationMessage: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
+
   shareButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    paddingVertical: 14,
-    borderRadius: 16,
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    minHeight: 52,
+    borderRadius: radius.lg,
     backgroundColor: colors.accent,
   },
   shareButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
+    ...type.bodyStrong,
     color: colors.onAccent,
   },
-  spacer: {
-    height: 40,
+  pressed: { opacity: 0.85 },
+
+  chart: {
+    height: CHART_H,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  barCol: { flex: 1, alignItems: 'center' },
+  barTrack: {
+    height: CHART_H - 22,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  bar: {
+    width: BAR_W,
+    borderTopLeftRadius: radius.sm / 2,
+    borderTopRightRadius: radius.sm / 2,
+  },
+  barFuture: {
+    width: BAR_W,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.surfaceMuted,
+  },
+  barScore: {
+    ...type.labelSm,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  barLabel: {
+    ...type.label,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
+  },
+  barLabelToday: {
+    color: colors.accentBright,
+  },
+
+  pillarHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  pillarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  pillarNameCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  pillarName: {
+    ...type.bodySmStrong,
+    color: colors.textPrimary,
+    flexShrink: 1,
+  },
+  pillarDayHead: {
+    ...type.micro,
+    color: colors.textMuted,
+    width: 20,
+    textAlign: 'center',
+  },
+  pillarDot: {
+    width: 10,
+    height: 10,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+  },
+  pillarDotOn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accentBright,
+  },
+  pillarDotFuture: {
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
+  },
+
+  motivationCard: {
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    padding: spacing.lg,
+  },
+  motivationTitle: {
+    ...type.h3,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  motivationMessage: {
+    ...type.body,
+    color: colors.textSecondary,
   },
 });

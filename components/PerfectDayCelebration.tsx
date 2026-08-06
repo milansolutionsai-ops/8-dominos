@@ -1,24 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Platform, Modal, Pressable } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
+import { Share2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { colors, fonts, type, radius, spacing } from '@/constants/theme';
 
 interface PerfectDayCelebrationProps {
-  trigger: boolean;
+  visible: boolean;
   streak?: number;
-  onComplete?: () => void;
+  onShare: () => void;
+  onDismiss: () => void;
 }
 
 /**
- * Perfect Day = the app's achievement-unlocked moment.
+ * Perfect Day = the app's achievement-unlocked moment, and its only real share
+ * moment.
  *
- * Gold treatment (the score ramp's 8/8 colour), a ring pulsing out behind the
- * badge, and layered haptics — Success on impact, a heavier thud just after —
- * so it lands like an unlock rather than a toast. The board's chain-topple wave
- * runs underneath and carries the motion.
+ * It used to be pointerEvents="none" and auto-dismiss after 3.4s, so the peak
+ * of the whole product was something the user could not touch, hold, or act on.
+ * It now holds until he decides, and carries the share action — the one instant
+ * a man who just closed all eight actually wants to show someone.
+ *
+ * Wrapped in a Modal because it renders inside the tab screen, so as a
+ * persistent overlay it would otherwise sit under the tab bar and let him
+ * navigate away mid-celebration.
  */
-export function PerfectDayCelebration({ trigger, streak = 0, onComplete }: PerfectDayCelebrationProps) {
+export function PerfectDayCelebration({ visible, streak = 0, onShare, onDismiss }: PerfectDayCelebrationProps) {
   const reduceMotion = useReducedMotion();
   const badgeScale = useRef(new Animated.Value(0.6)).current;
   const badgeOpacity = useRef(new Animated.Value(0)).current;
@@ -26,7 +33,7 @@ export function PerfectDayCelebration({ trigger, streak = 0, onComplete }: Perfe
   const glow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!trigger) return;
+    if (!visible) return;
 
     badgeScale.setValue(reduceMotion ? 1 : 0.6);
     badgeOpacity.setValue(0);
@@ -42,38 +49,32 @@ export function PerfectDayCelebration({ trigger, streak = 0, onComplete }: Perfe
       }, 180);
     }
 
-    const anim = Animated.sequence([
-      Animated.parallel([
-        Animated.spring(badgeScale, { toValue: 1, friction: 5.5, tension: 140, useNativeDriver: true }),
-        Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ...(reduceMotion
-          ? []
-          : [
-              Animated.timing(pulse, {
-                toValue: 1,
-                duration: 900,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-              }),
-            ]),
-      ]),
-      Animated.delay(1900),
-      Animated.parallel([
-        Animated.timing(badgeOpacity, { toValue: 0, duration: 420, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0, duration: 420, useNativeDriver: true }),
-      ]),
+    // Entrance only. No exit timer: the moment holds until he acts on it.
+    const anim = Animated.parallel([
+      Animated.spring(badgeScale, { toValue: 1, friction: 5.5, tension: 140, useNativeDriver: true }),
+      Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(glow, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      ...(reduceMotion
+        ? []
+        : [
+            Animated.timing(pulse, {
+              toValue: 1,
+              duration: 900,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]),
     ]);
 
-    anim.start(() => onComplete?.());
+    anim.start();
 
     return () => {
       anim.stop();
       if (thud) clearTimeout(thud);
     };
-  }, [trigger]);
+  }, [visible, reduceMotion]);
 
-  if (!trigger) return null;
+  if (!visible) return null;
 
   const glowScale = glow.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1.6] });
   const glowOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0, 0.32] });
@@ -81,18 +82,51 @@ export function PerfectDayCelebration({ trigger, streak = 0, onComplete }: Perfe
   const pulseOpacity = pulse.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] });
 
   return (
-    <View style={styles.container} pointerEvents="none">
-      <Animated.View style={[styles.glow, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]} />
-      <Animated.View style={[styles.pulseRing, { opacity: pulseOpacity, transform: [{ scale: pulseScale }] }]} />
+    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onDismiss}>
+      <View style={styles.container} accessibilityViewIsModal>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onDismiss}
+          accessibilityLabel="Dismiss celebration"
+        />
 
-      <Animated.View style={[styles.badge, { opacity: badgeOpacity, transform: [{ scale: badgeScale }] }]}>
-        <Text style={styles.kicker}>ACHIEVEMENT UNLOCKED</Text>
-        <Text style={styles.title}>Perfect Day</Text>
-        <Text style={styles.subtitle}>
-          All 8 dominos{streak > 0 ? ` · ${streak} day streak` : ''}
-        </Text>
-      </Animated.View>
-    </View>
+        <Animated.View
+          style={[styles.glow, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
+          pointerEvents="none"
+        />
+        <Animated.View
+          style={[styles.pulseRing, { opacity: pulseOpacity, transform: [{ scale: pulseScale }] }]}
+          pointerEvents="none"
+        />
+
+        <Animated.View style={[styles.badge, { opacity: badgeOpacity, transform: [{ scale: badgeScale }] }]}>
+          <Text style={styles.kicker}>ACHIEVEMENT UNLOCKED</Text>
+          <Text style={styles.title}>Perfect Day</Text>
+          <Text style={styles.subtitle}>
+            All 8 dominos{streak > 0 ? ` · ${streak} day streak` : ''}
+          </Text>
+
+          <Pressable
+            style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
+            onPress={onShare}
+            accessibilityRole="button"
+            accessibilityLabel="Share this day"
+          >
+            <Share2 size={18} color={colors.textInverse} strokeWidth={2.5} />
+            <Text style={styles.primaryText}>Share this day</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Not now"
+          >
+            <Text style={styles.secondaryText}>Not now</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
@@ -101,10 +135,10 @@ const RING = 180;
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 9999,
+    backgroundColor: colors.overlay,
   },
   glow: {
     position: 'absolute',
@@ -125,28 +159,53 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     borderWidth: 1.5,
     borderColor: colors.scoreFull,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
     borderRadius: radius.xl,
     alignItems: 'center',
+    minWidth: 280,
   },
   kicker: {
     fontFamily: fonts.bold,
     fontSize: 10,
     letterSpacing: 2.2,
     color: colors.scoreFull,
-    marginBottom: 6,
+    marginBottom: spacing.xs + 2,
   },
   title: {
-    fontFamily: fonts.extrabold,
-    fontSize: 26,
+    ...type.h1,
     color: colors.textPrimary,
-    letterSpacing: -0.5,
   },
   subtitle: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
+    ...type.caption,
     color: colors.textSecondary,
     marginTop: 3,
   },
+  primary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    alignSelf: 'stretch',
+    minHeight: 48,
+    marginTop: spacing.xl,
+    borderRadius: radius.md,
+    backgroundColor: colors.scoreFull,
+  },
+  primaryText: {
+    ...type.bodyStrong,
+    color: colors.textInverse,
+  },
+  secondary: {
+    alignSelf: 'stretch',
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xs,
+  },
+  secondaryText: {
+    ...type.bodySmStrong,
+    color: colors.textSecondary,
+  },
+  pressed: { opacity: 0.85 },
 });

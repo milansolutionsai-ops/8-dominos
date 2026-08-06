@@ -1,3 +1,7 @@
+import { colors } from '@/constants/theme';
+import { WEB_CAPTURE_SCALE } from '@/constants/shareCard';
+import type { ShareOutcome, ShareCardOptions } from './shareCard';
+
 /**
  * Web implementation of shareCard (Metro resolves this over shareCard.ts on web).
  *
@@ -10,23 +14,28 @@
  * path downloads the PNG instead. This is a preview convenience — judge the
  * real output on a device.
  */
-export async function shareCard(ref: React.RefObject<any>, filename = '8dominos.png'): Promise<void> {
+export async function shareCard(
+  ref: React.RefObject<any>,
+  opts: ShareCardOptions = {}
+): Promise<ShareOutcome> {
+  const { filename = '8dominos.png' } = opts;
   try {
     const node = ref?.current as HTMLElement | null;
-    if (!node || typeof (node as any).getBoundingClientRect !== 'function') {
-      throw new Error('Card is not rendered yet.');
+    if (!node || typeof node.getBoundingClientRect !== 'function') {
+      return { ok: false, message: 'The card isn’t ready yet. Give it a second and try again.' };
     }
 
     const { default: html2canvas } = await import('html2canvas');
     const canvas = await html2canvas(node, {
-      backgroundColor: null,
-      scale: 2,
+      // The card is full-bleed navy; a null background would punch it out.
+      backgroundColor: colors.bg,
+      scale: WEB_CAPTURE_SCALE,
       logging: false,
       useCORS: true,
     });
 
     const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-    if (!blob) throw new Error('Could not encode the image.');
+    if (!blob) return { ok: false, message: 'We couldn’t build your card. Try again.' };
 
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -36,9 +45,9 @@ export async function shareCard(ref: React.RefObject<any>, filename = '8dominos.
     anchor.click();
     document.body.removeChild(anchor);
     URL.revokeObjectURL(objectUrl);
+    return { ok: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
     console.error('Share failed:', error);
-    window.alert(`Share failed: ${message}`);
+    return { ok: false, message: 'We couldn’t build your card. Give it a second and try again.' };
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { ChevronLeft, ChevronRight, Flame, Share2, Calendar } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Flame, Calendar } from 'lucide-react-native';
 import { DateUtils } from '@/utils/dateUtils';
 import { dailyMessage } from '@/utils/motivation';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
@@ -24,10 +24,9 @@ interface HudHeaderProps {
   dailyScore: number;
   totalDaily: number;
   streak: number;
-  onShare?: () => void;
 }
 
-export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak, onShare }: HudHeaderProps) {
+export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, streak }: HudHeaderProps) {
   const pct = totalDaily > 0 ? (dailyScore / totalDaily) * 100 : 0;
   const color = scoreColor(pct);
   const offset = CIRC - (pct / 100) * CIRC;
@@ -37,14 +36,30 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
     <View style={styles.band}>
       {/* Day navigation strip */}
       <View style={styles.navRow}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => onDateChange(DateUtils.addDays(currentDate, -1))} hitSlop={8}>
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => onDateChange(DateUtils.addDays(currentDate, -1))}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Previous day"
+        >
           <ChevronLeft size={22} color={colors.textSecondary} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={styles.dateWrap}>
-          <Text style={styles.date}>{DateUtils.formatDate(currentDate)}</Text>
-          {isToday && <Text style={styles.todayPill}>TODAY</Text>}
+          {/* Shrinks rather than wrapping: the full date plus the pill overflows
+              a 390pt header, which used to break TODAY across two lines. */}
+          <Text style={styles.date} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+            {DateUtils.formatDate(currentDate)}
+          </Text>
+          {isToday && <Text style={styles.todayPill} maxFontSizeMultiplier={1.2}>TODAY</Text>}
         </View>
-        <TouchableOpacity style={styles.navBtn} onPress={() => onDateChange(DateUtils.addDays(currentDate, 1))} hitSlop={8}>
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => onDateChange(DateUtils.addDays(currentDate, 1))}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Next day"
+        >
           <ChevronRight size={22} color={colors.textSecondary} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
@@ -81,22 +96,16 @@ export function HudHeader({ currentDate, onDateChange, dailyScore, totalDaily, s
           <Text style={[styles.streakNum, { color: streak > 0 ? colors.textPrimary : colors.textMuted }]}>{streak}</Text>
         </View>
 
-        {onShare && (
-          <TouchableOpacity
-            style={styles.shareBtn}
-            onPress={onShare}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Share my day"
-          >
-            <Share2 size={18} color={colors.onAccent} strokeWidth={2.5} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {!isToday && (
-        <TouchableOpacity style={styles.jump} onPress={() => onDateChange(new Date())}>
-          <Calendar size={14} color={colors.accent} strokeWidth={2.5} />
+        <TouchableOpacity
+          style={styles.jump}
+          onPress={() => onDateChange(new Date())}
+          accessibilityRole="button"
+          accessibilityLabel="Jump to today"
+        >
+          <Calendar size={14} color={colors.accentBright} strokeWidth={2.5} />
           <Text style={styles.jumpText}>Jump to Today</Text>
         </TouchableOpacity>
       )}
@@ -140,8 +149,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 18,
     color: colors.textPrimary,
+    flexShrink: 1,
   },
   todayPill: {
+    flexShrink: 0,
     fontFamily: fonts.bold,
     fontSize: 10,
     letterSpacing: 0.6,
@@ -200,21 +211,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontVariant: ['tabular-nums'],
   },
-  shareBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-  },
   jump: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
     gap: 6,
     marginTop: spacing.md,
-    paddingVertical: 8,
+    minHeight: 44,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.accentSoft,
     borderRadius: radius.md,
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
   jumpText: {
     fontFamily: fonts.semibold,
     fontSize: 13,
-    color: colors.accent,
+    // accent (#0062FF) is only 3.46:1 as text; accentBright clears AA.
+    color: colors.accentBright,
   },
 });

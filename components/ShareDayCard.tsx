@@ -1,11 +1,14 @@
 import React, { forwardRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Flame } from 'lucide-react-native';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
-import { DominoPips } from './DominoPips';
+import { colors, fonts } from '@/constants/theme';
+import { u, card } from '@/constants/shareCard';
+import { ShareCardFrame } from './share/ShareCardFrame';
+import { ShareCardRow } from './share/ShareCardRow';
 
 export interface ShareDayPillar {
   title: string;
+  activity: string;
   completed: boolean;
 }
 
@@ -26,176 +29,84 @@ function scoreColor(score: number, total: number): string {
 }
 
 /**
- * Share-ready summary of a single day. Captured to PNG (react-native-view-shot)
- * and pushed to the native share sheet.
+ * Share-ready summary of a single day, exported at 1080x1920.
  *
- * Shows completion BY PILLAR only — never the user's activity text, which is
- * personal ("called mom", "therapy") and shouldn't leave the device in an image
- * that gets posted.
+ * The habit text is on the card deliberately. An earlier version withheld it as
+ * a privacy measure, which made no sense: the app is local-only and the user is
+ * the one hitting share. The actual risk was posting an image you had not seen,
+ * and that is solved by SharePreviewSheet, which is the consent gate and must
+ * never be bypassed on any path.
  */
 export const ShareDayCard = forwardRef<View, { data: ShareDayData }>(({ data }, ref) => {
-  const perfect = data.score >= data.total;
-  const color = scoreColor(data.score, data.total);
+  const perfect = data.total > 0 && data.score >= data.total;
 
   return (
-    <View ref={ref} collapsable={false} style={styles.card}>
-      <Text style={styles.kicker}>8 DOMINOS</Text>
-      <Text style={styles.heading}>My Day</Text>
-      <Text style={styles.range}>{data.dateLabel}</Text>
-
-      <View style={styles.scoreBlock}>
-        <Text style={[styles.score, { color }]}>
-          {data.score}<Text style={styles.scoreTotal}>/{data.total}</Text>
-        </Text>
-        <Text style={styles.scoreLabel}>
-          {perfect ? 'perfect day — all eight down' : 'dominos down today'}
-        </Text>
-      </View>
-
-      {/* The chain: completed pillars lit, the rest dimmed. */}
-      <View style={styles.chain}>
-        {data.pillars.map((pillar, i) => (
-          <View key={pillar.title} style={styles.chainItem}>
-            <View style={[styles.chainTile, pillar.completed ? styles.chainTileOn : styles.chainTileOff]}>
-              <DominoPips
-                count={i + 1}
-                color={pillar.completed ? colors.onAccent : colors.textMuted}
-                size={14}
-              />
-            </View>
-            <Text
-              style={[styles.chainLabel, pillar.completed && styles.chainLabelOn]}
-              numberOfLines={1}
-            >
-              {pillar.title}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.footerRow}>
+    <ShareCardFrame
+      ref={ref}
+      meta={data.dateLabel}
+      heroValue={String(data.score)}
+      heroSuffix={`/${data.total}`}
+      heroColor={scoreColor(data.score, data.total)}
+      heroLabel={perfect ? 'perfect day. all eight down.' : 'dominos down today'}
+      heroLabelColor={perfect ? colors.scoreFull : undefined}
+      footerLeft={
         <View style={styles.streak}>
-          <Flame size={15} color={data.streak > 0 ? colors.warning : colors.textMuted} strokeWidth={2.5} />
+          <Flame
+            size={u(13)}
+            color={data.streak > 0 ? colors.warning : colors.textMuted}
+            strokeWidth={2.5}
+          />
           <Text style={styles.streakText}>
             {data.streak} day streak
           </Text>
         </View>
-        <Text style={styles.url}>8dominos.com</Text>
-      </View>
-    </View>
+      }
+    >
+      {data.pillars.map((pillar, i) => (
+        <ShareCardRow key={pillar.title} pipCount={i + 1} title={pillar.title} active={pillar.completed}>
+          <Text
+            style={[styles.activity, pillar.completed ? styles.activityOn : styles.activityOff]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {pillar.activity?.trim() || '—'}
+          </Text>
+        </ShareCardRow>
+      ))}
+    </ShareCardFrame>
   );
 });
 
 ShareDayCard.displayName = 'ShareDayCard';
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    padding: spacing.xl,
-    width: 360,
-  },
-  kicker: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    letterSpacing: 3,
-    color: colors.accent,
-    textTransform: 'uppercase',
-  },
-  heading: {
-    fontFamily: fonts.extrabold,
-    fontSize: 30,
-    color: colors.textPrimary,
-    marginTop: spacing.sm,
-    letterSpacing: -0.8,
-  },
-  range: {
+  activity: {
+    flex: 1,
     fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 2,
+    fontSize: u(12),
+    lineHeight: u(16),
+    includeFontPadding: false,
+    // react-native-web implements numberOfLines with -webkit-line-clamp, which
+    // html2canvas does not support, so the web export would render the full
+    // untruncated string and blow the row height. These three properties it
+    // does honour.
+    ...Platform.select({
+      web: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as object,
+      default: {},
+    }),
   },
-  scoreBlock: {
-    alignItems: 'center',
-    marginVertical: spacing.xl,
-  },
-  score: {
-    fontFamily: fonts.extrabold,
-    fontSize: 64,
-    letterSpacing: -2,
-    fontVariant: ['tabular-nums'],
-  },
-  scoreTotal: {
-    fontFamily: fonts.medium,
-    fontSize: 26,
-    color: colors.textMuted,
-  },
-  scoreLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: -2,
-  },
-  chain: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  chainItem: {
-    alignItems: 'center',
-    width: 36,
-  },
-  chainTile: {
-    width: 28,
-    height: 40,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  chainTileOn: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accentBright,
-  },
-  chainTileOff: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.border,
-  },
-  chainLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 8,
-    color: colors.textMuted,
-    marginTop: 5,
-  },
-  chainLabelOn: {
-    fontFamily: fonts.semibold,
-    color: colors.textSecondary,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xl,
-  },
+  activityOn: { color: colors.textSecondary },
+  activityOff: { color: colors.textMuted },
   streak: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: u(6),
   },
   streakText: {
     fontFamily: fonts.semibold,
-    fontSize: 13,
+    fontSize: u(11),
+    letterSpacing: u(0.2),
     color: colors.textSecondary,
     fontVariant: ['tabular-nums'],
-  },
-  url: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    color: colors.accent,
-    letterSpacing: 0.3,
   },
 });

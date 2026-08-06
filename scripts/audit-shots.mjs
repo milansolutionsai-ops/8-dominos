@@ -67,17 +67,48 @@ async function tapTab(label) {
   return true;
 }
 
-/** Find a node by its text and return the bounding box of an ancestor N levels up. */
-async function boxOfAncestor(text, levels) {
-  return page.evaluate(({ text, levels }) => {
+/** Click any element whose exact trimmed text matches, via a real mouse press. */
+async function tapText(text) {
+  const box = await page.evaluate((t) => {
     const hit = Array.from(document.querySelectorAll('div,span'))
-      .find((el) => el.textContent?.trim() === text && el.children.length === 0);
+      .find((el) => el.textContent?.trim() === t && el.children.length === 0);
     if (!hit) return null;
-    let n = hit;
-    for (let i = 0; i < levels && n.parentElement; i++) n = n.parentElement;
-    const r = n.getBoundingClientRect();
-    return { x: r.x, y: r.y, width: r.width, height: r.height };
-  }, { text, levels });
+    const r = hit.getBoundingClientRect();
+    if (r.width === 0) return null;
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  }, text);
+  if (!box) return false;
+  await page.mouse.click(box.x, box.y);
+  await sleep(1400);
+  return true;
+}
+
+/**
+ * Pull the share preview's off-screen capture host on-screen and shoot it at
+ * true export size. This is the actual artifact users post, so it is worth
+ * seeing unscaled rather than judging the shrunken preview.
+ */
+async function shootCaptureHost(name) {
+  const box = await page.evaluate(() => {
+    const host = Array.from(document.querySelectorAll('div')).find((el) => {
+      const s = getComputedStyle(el);
+      return s.position === 'absolute' && parseFloat(s.left) < -5000;
+    });
+    if (!host) return null;
+    host.style.left = '0px';
+    host.style.top = '0px';
+    host.style.zIndex = '99999';
+    const card = host.firstElementChild || host;
+    const r = card.getBoundingClientRect();
+    return { x: 0, y: 0, width: Math.ceil(r.width), height: Math.ceil(r.height) };
+  });
+  if (!box) { console.log('!! capture host not found for', name); return false; }
+  await page.setViewport({ ...VIEWPORT, width: Math.max(box.width, 390), height: box.height });
+  await sleep(700);
+  await page.screenshot({ path: `${OUT}/${name}.png`, type: 'png', clip: box });
+  await page.setViewport(VIEWPORT);
+  console.log('shot', name);
+  return true;
 }
 
 // ---- Daily screen ----
@@ -88,46 +119,30 @@ await scrollTo(1500);
 await shoot('03-daily-chain-lower');
 await scrollTo(4000);
 await shoot('04-daily-reflection');
-await scrollTo(0);
 
-// ---- The off-screen ShareDayCard capture host: pull it on-screen and shoot it ----
-const dayBox = await page.evaluate(() => {
-  // The host is absolutely positioned at left:-10000 with the card inside.
-  const hosts = Array.from(document.querySelectorAll('div')).filter((el) => {
-    const s = getComputedStyle(el);
-    return s.position === 'absolute' && parseFloat(s.left) < -5000;
-  });
-  if (!hosts.length) return null;
-  const h = hosts[0];
-  h.style.left = '15px';
-  h.style.top = '40px';
-  h.style.zIndex = '99999';
-  const card = h.firstElementChild || h;
-  const r = card.getBoundingClientRect();
-  return { x: Math.max(0, r.x - 8), y: Math.max(0, r.y - 8), width: r.width + 16, height: r.height + 16 };
-});
-if (dayBox) { await shoot('05-SHARE-DAY-CARD', dayBox); }
-else console.log('!! day capture host not found');
+// ---- Day share: open the preview, shoot the sheet, then the true-size card ----
+console.log('day share:', await tapText('Share this day'));
+await shoot('05-share-day-PREVIEW');
+await shootCaptureHost('06-SHARE-DAY-CARD');
 await page.reload({ waitUntil: 'networkidle2' });
 await sleep(6500);
 
 // ---- Weekly screen ----
 console.log('weekly:', await tapTab('Weekly'));
-await shoot('06-weekly-top');
-await scrollTo(430);
-await shoot('07-weekly-perf-and-sharecard');
-const weekBox = await boxOfAncestor('My Week', 1);
-if (weekBox && weekBox.height > 100) await shoot('08-SHARE-WEEK-CARD', {
-  x: Math.max(0, weekBox.x - 6), y: Math.max(0, weekBox.y - 6),
-  width: Math.min(390, weekBox.width + 12), height: weekBox.height + 12,
-});
-else console.log('!! week card box', JSON.stringify(weekBox));
-await scrollTo(1000);
-await shoot('09-weekly-breakdown');
-await scrollTo(1700);
-await shoot('10-weekly-mood-grid');
-await scrollTo(2600);
-await shoot('11-weekly-dominos-list');
+await shoot('07-weekly-top');
+await scrollTo(500);
+await shoot('08-weekly-breakdown');
+await scrollTo(1200);
+await shoot('09-weekly-pillars');
+await scrollTo(0);
+
+// ---- Week share ----
+console.log('week share:', await tapText('Share my week'));
+await shoot('10-share-week-PREVIEW');
+await shootCaptureHost('11-SHARE-WEEK-CARD');
+await page.reload({ waitUntil: 'networkidle2' });
+await sleep(6500);
+await tapTab('Weekly');
 
 // ---- Settings ----
 console.log('settings:', await tapTab('Settings'));
