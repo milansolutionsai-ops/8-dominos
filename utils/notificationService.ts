@@ -27,12 +27,13 @@ export class NotificationService {
         return finalStatus === 'granted';
     }
 
-    static async scheduleDailyReminder() {
-        if (Platform.OS === 'web') return;
+    /** Resolves false when the OS denied permission, so the caller can undo the toggle. */
+  static async scheduleDailyReminder(): Promise<boolean> {
+        if (Platform.OS === 'web') return false;
 
         // Check if permission is granted
         const hasPermission = await this.requestPermissions();
-        if (!hasPermission) return;
+        if (!hasPermission) return false;
 
         // Cancel existing reminders first to avoid duplicates
         await this.cancelAllReminders();
@@ -50,6 +51,7 @@ export class NotificationService {
                 minute: 0,
             } as Notifications.DailyTriggerInput,
         });
+        return true;
     }
 
     static async cancelAllReminders() {

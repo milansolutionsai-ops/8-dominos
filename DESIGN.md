@@ -24,7 +24,17 @@ A minimalist, **premium, game-first** habit tracker. The user commits to 8 daily
 
 ---
 
-## 3. Current app state (baseline, from the design-pass audit — scored 46/100)
+## 3. App state
+
+**Second design pass (12 skills, dual-agent critique, real screenshots) scored the app 47/100** against this brief — barely above the 46 baseline below, because Batches 0–0.6 bought visual quality while accessibility, design-system adoption and the share system went untouched. The elevation pass that followed addressed all six areas; see the `milan/elevation-pass` commits for what changed and why.
+
+Standing rules that came out of it:
+- The `type` scale in `constants/theme.ts` is mandatory. It went unused for a whole batch because it lacked the sizes screens needed; those exist now. Never pair `fontWeight` with a `fonts.*` face — Poppins is static, so iOS ignores the weight and Android can fake-bold a real bold.
+- Incomplete tiles are the loud ones. The board is a chain that falls, not a wall that lights up.
+- Weekly scores against **elapsed days**. Never denominate on the full seven mid-week, and never count a day that has not happened as missed.
+- `DateUtils.getWeekKeyForDate` buckets Sunday into the next week. It cannot be fixed in place — user data was written with it. Aggregate per date via `StatsService.summarizeWeek`.
+
+### Original baseline (pre-Batch 0, scored 46/100)
 
 - **Stack:** Expo SDK 54, React Native 0.81, React 19, TypeScript, Expo Router, AsyncStorage (single-user). Reanimated v4 + gesture-handler installed. Now also: Moti, Lottie, react-native-view-shot, Poppins.
 - **Off-brand look today:** cream `#fffbea` + bright yellow `#fedd14` + black borders + OS system font. Matches neither the new brand nor a premium feel.
@@ -53,7 +63,8 @@ Reference feel: Apple-grade native motion (springs, interruptible, physical) + a
 - **Weekly analytics + mood trend:** dark data-viz, blue highlights, legible.
 - **Onboarding + quote splash:** premium first impression on brand.
 - **Settings, journal, mood, day nav, tab bar:** consistent system, no orphan light screens.
-- **NEW — "Share my week":** one-tap branded summary card (week score, streak, best domino, mood trend) to the native share sheet. Doubles as marketing. Needs a designed card layout.
+- **Share cards (built):** day and week summaries exported at a fixed **1080x1920 (9:16)**, full-bleed, no inner frame. Both go through `SharePreviewSheet`, which shows the finished image before it leaves the device. That preview is the consent gate for the habit text being on the card; **do not add a share path that bypasses it.** Geometry lives in `constants/shareCard.ts` — read the header there before touching sizing, since view-shot has no `pixelRatio` and its width/height mean points on iOS but pixels on Android. Cards must stay free of `LinearGradient` so the iOS `useRenderInContext` fallback can rasterise them.
+- **Share is a moment, not a feature.** The only prompts are the Perfect Day celebration and a Sunday week card, each once, each silenced permanently by one tap. No notifications.
 
 ---
 

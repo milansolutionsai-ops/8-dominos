@@ -132,7 +132,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
       <View style={styles.footer}>
         {currentStep === 0 && (
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+          <TouchableOpacity
+            style={styles.nextButton}
+            accessibilityRole="button"
+            accessibilityLabel="Get started"
+            onPress={handleNext}>
             <Text style={styles.nextButtonText}>Get Started</Text>
             <ArrowRight size={20} color={colors.onAccent} />
           </TouchableOpacity>
@@ -141,7 +145,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         {isLastStep && (
           <View>
             <Text style={styles.completionHint}>✨ Your activities are being auto-saved</Text>
-            <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
+            <TouchableOpacity
+            style={styles.completeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Complete setup"
+            onPress={handleComplete}>
               <Text style={styles.completeButtonText}>Complete Setup</Text>
               <ArrowRight size={20} color={colors.onAccent} />
             </TouchableOpacity>
@@ -174,14 +182,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textPrimary,
     fontFamily: fonts.bold,
-    fontWeight: '700',
     marginBottom: 8,
     opacity: 0.7,
   },
   title: {
     fontSize: 28,
     fontFamily: fonts.bold,
-    fontWeight: '800',
     color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: -0.5,
@@ -189,7 +195,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontFamily: fonts.semibold,
-    fontWeight: '600',
     color: colors.textPrimary,
     opacity: 0.7,
   },
@@ -214,7 +219,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     margin: 4,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     transform: [{ rotate: '15deg' }],
     ...elevation.sm,
@@ -233,7 +238,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     fontFamily: fonts.semibold,
-    fontWeight: '600',
   },
   welcomeSubtext: {
     fontSize: 14,
@@ -241,7 +245,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     fontFamily: fonts.medium,
-    fontWeight: '500',
   },
   nextStepHint: {
     marginTop: 40,
@@ -253,7 +256,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textMuted,
     fontFamily: fonts.semibold,
-    fontWeight: '600',
     textAlign: 'center',
     fontStyle: 'italic',
   },
@@ -272,14 +274,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: 16,
     padding: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   nextButtonText: {
     fontSize: 16,
     fontFamily: fonts.bold,
-    fontWeight: '800',
     color: colors.onAccent,
     marginRight: 8,
     letterSpacing: 0.3,
@@ -291,14 +292,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: 16,
     padding: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   completeButtonText: {
     fontSize: 16,
     fontFamily: fonts.bold,
-    fontWeight: '800',
     color: colors.onAccent,
     marginRight: 8,
     letterSpacing: 0.3,
@@ -307,7 +307,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.success,
     fontFamily: fonts.bold,
-    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -324,6 +323,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.success,
     fontFamily: fonts.bold,
-    fontWeight: '700',
   },
 });

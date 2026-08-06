@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -172,9 +172,15 @@ export default function DailyScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <KeyboardAvoidingView
+        style={styles.scrollView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
       >
         <HudHeader
@@ -230,6 +236,7 @@ export default function DailyScreen() {
 
         <DailyJournal currentDate={currentDate.toISOString().split('T')[0]} />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <PerfectDayCelebration
         visible={overlay.kind === 'celebration'}

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Save, Settings } from 'lucide-react-native';
 import { Domino, DayOfWeek, DAYS_OF_WEEK, DAY_NAMES, FULL_DAY_NAMES, PILLAR_HINTS } from '@/types/domino';
+import { DominoPips } from './DominoPips';
 import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
+import { ACTIVITY_MAX_CHARS } from '@/constants/shareCard';
 
 /**
  * "What can you do to invest in your BODY (Physically) on Tuesday?"
@@ -79,6 +81,10 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
             style={[styles.headerButton, styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
             onPress={handleSave}
             disabled={!hasChanges}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Save activities"
+            accessibilityState={{ disabled: !hasChanges }}
           >
             <Save size={14} color={colors.onAccent} />
           </TouchableOpacity>
@@ -100,6 +106,9 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
                 selectedDay === day && styles.activeDayTab,
               ]}
               onPress={() => setSelectedDay(day)}
+              accessibilityRole="tab"
+              accessibilityLabel={FULL_DAY_NAMES[index]}
+              accessibilityState={{ selected: selectedDay === day }}
             >
               <Text style={[
                 styles.dayTabText,
@@ -117,7 +126,7 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
           <View key={domino.id} style={styles.dominoForm}>
             <View style={styles.dominoHeader}>
               <View style={styles.dominoNumber}>
-                <Text style={styles.dominoNumberText}>{index + 1}</Text>
+                <DominoPips count={index + 1} color={colors.onAccent} size={13} />
               </View>
               <Text style={styles.dominoTitle}>{domino.title}</Text>
             </View>
@@ -131,7 +140,9 @@ export function DominoSetupForm({ dominos, onSave, onReset, onResetWeek, liveUpd
               onBlur={() => setFocusedId(null)}
               multiline
               numberOfLines={2}
+              maxLength={ACTIVITY_MAX_CHARS}
               placeholderTextColor={colors.textMuted}
+              accessibilityLabel={`${domino.title} activity for ${FULL_DAY_NAMES[DAYS_OF_WEEK.indexOf(selectedDay)]}`}
             />
           </View>
         ))}
@@ -209,7 +220,8 @@ const styles = StyleSheet.create({
   },
   dayTab: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    minHeight: 44,
+    justifyContent: 'center',
     marginRight: spacing.sm,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceMuted,
@@ -251,9 +263,11 @@ const styles = StyleSheet.create({
   },
   dominoNumber: {
     backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    width: 24,
-    height: 24,
+    borderRadius: 4,
+    // Domino-proportioned, and tall enough for the pip face, which renders
+    // `size * 2 + 1`.
+    width: 18,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,

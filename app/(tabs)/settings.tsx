@@ -99,10 +99,10 @@ export default function SettingsScreen() {
                 }
               }));
               await updateDominos(updatedDominos);
-              Alert.alert('Week Reset', 'This week\'s progress has been cleared.');
+              Alert.alert('Week reset', 'This week\'s progress has been cleared.');
             } catch (error) {
               console.error('Error resetting week:', error);
-              Alert.alert('Error', 'Failed to reset week data.');
+              Alert.alert('Couldn’t reset', 'Something went wrong. Try again in a moment.');
             }
           },
         },
@@ -112,24 +112,24 @@ export default function SettingsScreen() {
 
   const handleResetAllData = () => {
     Alert.alert(
-      'Reset All Data',
-      'This will delete all your progress and activities. Are you sure?',
+      'Delete all data?',
+      'This removes every domino, activity and day of progress. It cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset Everything',
+          text: 'Delete everything',
           style: 'destructive',
           onPress: async () => {
             try {
               await StorageService.setSetupCompleted(false);
               const defaultDominos = StorageService.createDefaultDominos();
               await updateDominos(defaultDominos);
-              Alert.alert('Reset Complete', 'All data has been reset.', [
+              Alert.alert('Deleted', 'Everything has been cleared.', [
                 { text: 'OK', onPress: () => router.replace('/') }
               ]);
             } catch (error) {
               console.error('Error resetting data:', error);
-              Alert.alert('Error', 'Failed to reset data.');
+              Alert.alert('Couldn’t delete', 'Something went wrong. Try again in a moment.');
             }
           },
         },
@@ -149,13 +149,26 @@ export default function SettingsScreen() {
 
   const handleNotificationsToggle = async (enabled: boolean) => {
     setNotificationsEnabled(enabled);
-    StorageService.saveSetting('notificationsEnabled', enabled);
 
-    if (enabled) {
-      await NotificationService.scheduleDailyReminder();
-    } else {
+    if (!enabled) {
+      await StorageService.saveSetting('notificationsEnabled', false);
       await NotificationService.cancelAllReminders();
+      return;
     }
+
+    // The switch used to stay on and persist true even when the OS prompt was
+    // denied, so the user believed a reminder was scheduled when none was.
+    const scheduled = await NotificationService.scheduleDailyReminder();
+    if (!scheduled) {
+      setNotificationsEnabled(false);
+      await StorageService.saveSetting('notificationsEnabled', false);
+      Alert.alert(
+        'Notifications are off',
+        'Reminders need notification permission. You can turn it on for 8 Dominos in your device settings.'
+      );
+      return;
+    }
+    await StorageService.saveSetting('notificationsEnabled', true);
   };
 
   if (loading) {
@@ -170,7 +183,11 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
         <View style={styles.header}>
           <Settings size={32} color={colors.textPrimary} strokeWidth={2} />
           <Text style={styles.headerTitle}>Settings</Text>
@@ -214,6 +231,8 @@ export default function SettingsScreen() {
               </View>
             </View>
             <Switch
+              accessibilityLabel="Sound effects"
+              accessibilityHint="Plays a sound when you complete a domino"
               value={soundEnabled}
               onValueChange={handleSoundToggle}
               trackColor={{ false: colors.border, true: colors.accent }}
@@ -234,6 +253,8 @@ export default function SettingsScreen() {
               </View>
             </View>
             <Switch
+              accessibilityLabel="Daily reminders"
+              accessibilityHint="Sends a reminder at 9pm to check in"
               value={notificationsEnabled}
               onValueChange={handleNotificationsToggle}
               trackColor={{ false: colors.border, true: colors.accent }}
@@ -258,6 +279,9 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handleResetWeek}
+            accessibilityRole="button"
+            accessibilityLabel="Reset this week"
+            accessibilityHint="Clears all progress for the current week"
           >
             <View style={[styles.actionIconContainer, styles.warningIconContainer]}>
               <RotateCcw size={24} color={colors.warning} strokeWidth={2} />
@@ -271,6 +295,9 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={handleResetAllData}
+            accessibilityRole="button"
+            accessibilityLabel="Delete all data"
+            accessibilityHint="Permanently removes every domino and all progress"
           >
             <View style={[styles.actionIconContainer, styles.dangerIconContainer]}>
               <Trash2 size={24} color={colors.danger} strokeWidth={2} />
@@ -349,7 +376,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 32,
-    fontWeight: '800',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginTop: 12,
@@ -360,7 +386,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '800',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 12,
@@ -370,7 +395,6 @@ const styles = StyleSheet.create({
   },
   sectionTitleSmall: {
     fontSize: 14,
-    fontWeight: '800',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 16,
@@ -381,7 +405,7 @@ const styles = StyleSheet.create({
   settingItem: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
@@ -400,21 +424,19 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    fontWeight: '700',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 14,
-    fontWeight: '400',
     fontFamily: fonts.regular,
     color: colors.textMuted,
   },
   actionButton: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
@@ -428,7 +450,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
   },
   warningIconContainer: {
     backgroundColor: colors.accentSoft,
@@ -443,21 +465,19 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 16,
-    fontWeight: '700',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
   actionDescription: {
     fontSize: 14,
-    fontWeight: '400',
     fontFamily: fonts.regular,
     color: colors.textMuted,
   },
   infoCard: {
     backgroundColor: colors.accentSoft,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
@@ -470,14 +490,12 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 16,
-    fontWeight: '700',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     flex: 1,
   },
   infoDescription: {
     fontSize: 14,
-    fontWeight: '400',
     fontFamily: fonts.regular,
     color: colors.textPrimary,
     lineHeight: 20,
@@ -485,10 +503,13 @@ const styles = StyleSheet.create({
   },
   infoQuote: {
     fontSize: 14,
-    fontWeight: '700',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     fontStyle: 'italic',
+  },
+  infoLinkButton: {
+    minHeight: 44,
+    justifyContent: 'center',
   },
   infoLink: {
     fontSize: 14,
@@ -529,7 +550,7 @@ const styles = StyleSheet.create({
   versionCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
     alignItems: 'center',
@@ -537,14 +558,12 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    fontWeight: '700',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
   builtByText: {
     fontSize: 12,
-    fontWeight: '400',
     fontFamily: fonts.regular,
     color: colors.textMuted,
   },
@@ -557,7 +576,7 @@ const styles = StyleSheet.create({
   statCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     padding: 20,
     width: '47%',
@@ -566,14 +585,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 32,
-    fontWeight: '800',
     fontFamily: fonts.bold,
     color: colors.textPrimary,
     marginBottom: 8,
   },
   statLabel: {
     fontSize: 12,
-    fontWeight: '400',
     fontFamily: fonts.regular,
     color: colors.textMuted,
     textAlign: 'center',

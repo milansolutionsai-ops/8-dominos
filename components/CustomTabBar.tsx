@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Home, Settings } from 'lucide-react-native';
-import { colors, fonts, radius, elevation } from '@/constants/theme';
+import { colors, fonts, radius, spacing, elevation } from '@/constants/theme';
 
 interface CustomTabBarProps {
   state: any;
@@ -80,6 +80,9 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
             onLongPress={onLongPress}
             style={styles.tabButton}
             activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityLabel={label}
+            accessibilityState={{ selected: isFocused }}
           >
             <View
               style={[
@@ -88,7 +91,6 @@ export default function CustomTabBar({ state, descriptors, navigation }: CustomT
               ]}
             >
               {getIcon(route.name, isFocused)}
-              {isFocused && <View style={styles.indicatorLine} />}
             </View>
             <Text
               style={[
@@ -121,12 +123,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 18,
-    paddingBottom: 4,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 34,
     borderRadius: radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
@@ -136,17 +138,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     ...elevation.accentGlow,
   },
-  indicatorLine: {
-    position: 'absolute',
-    bottom: 4,
-    width: 32,
-    height: 3,
-    backgroundColor: colors.accent,
-    borderRadius: 1.5,
-  },
   tabLabel: {
     fontSize: 11,
-    marginTop: 16,
+    // Was 16, roughly 4x the platform norm, which is why the labels read as
+    // detached from their icons.
+    marginTop: spacing.xs,
     textAlign: 'center',
   },
 });

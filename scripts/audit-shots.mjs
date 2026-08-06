@@ -124,7 +124,7 @@ await shoot('04-daily-reflection');
 console.log('day share:', await tapText('Share this day'));
 await shoot('05-share-day-PREVIEW');
 await shootCaptureHost('06-SHARE-DAY-CARD');
-await page.reload({ waitUntil: 'networkidle2' });
+await page.goto(BASE, { waitUntil: 'networkidle2' });
 await sleep(6500);
 
 // ---- Weekly screen ----
@@ -140,7 +140,7 @@ await scrollTo(0);
 console.log('week share:', await tapText('Share my week'));
 await shoot('10-share-week-PREVIEW');
 await shootCaptureHost('11-SHARE-WEEK-CARD');
-await page.reload({ waitUntil: 'networkidle2' });
+await page.goto(BASE, { waitUntil: 'networkidle2' });
 await sleep(6500);
 await tapTab('Weekly');
 
